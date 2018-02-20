@@ -180,6 +180,65 @@ void SetupGeometry() {
 	glBindVertexArray(0);
 }
 
+void SetupSquareGeometry() {
+	//
+	// generate cone
+	//
+	GLfloat cf = 0.0;
+	Vertex t;
+	t.color[0] = cf;
+	cf = 1. - cf;
+	t.color[1] = cf;
+	cf = 1. - cf;
+	t.color[2] = cf;
+	cf = 1. - cf;
+	//v.push_back(t); // Apex
+
+	t.position[0] = 0.2f;
+	t.position[1] = 0.2f;
+	t.position[2] = 2;
+	v.push_back(t);
+
+	t.position[0] = 0.8f;
+	t.position[1] = 0.2f;
+	t.position[2] = 2;
+	v.push_back(t);
+
+	t.position[0] = 0.8f;
+	t.position[1] = 0.8f;
+	t.position[2] = 2;
+	v.push_back(t);
+
+	t.position[0] = 0.2f;
+	t.position[1] = 0.8f;
+	t.position[2] = 2;
+	v.push_back(t);
+
+	printf("Size %d\n", v.size());
+	//
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	/* Allocate and assign One Vertex Buffer Object to our handle */
+	glGenBuffers(1, vbo);
+	/* Bind our VBO as being the active buffer and storing vertex attributes (coordinates + colors) */
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	/* Copy the vertex data from cone to our buffer */
+	/* v,size() * sizeof(GLfloat) is the size of the cone array, since it contains 12 Vertex values */
+	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
+	/* Specify that our coordinate data is going into attribute index 0, and contains three doubles per vertex */
+	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) 0 */
+	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, position));
+	/* Enable attribute index 0 as being used */
+	glEnableVertexAttribArray(0);
+	/* Specify that our color data is going into attribute index 1, and contains three floats per vertex */
+	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) ( 3 * sizeof ( GLdouble ) ) i.e. the size (in bytes)
+	occupied by the first attribute (position) */
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
+																																	 /* Enable attribute index 1 as being used */
+	glEnableVertexAttribArray(1);  /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	glBindVertexArray(0);
+}
+
 void SetupShaders(void) {
 	/* Read our shaders into the appropriate buffers */
 	vertexsource = filetobuf("./tutorial3.vert");

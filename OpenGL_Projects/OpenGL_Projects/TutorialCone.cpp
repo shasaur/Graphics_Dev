@@ -44,7 +44,6 @@ By consultit@katamail.com
 #include <glm/gtc/type_ptr.hpp>
 
 
-
 void Check(const char *where) { // Function to check OpenGL error status
 	const char * what;
 	int err = glGetError();   //0 means no error
@@ -120,7 +119,7 @@ void Print(glm::mat4 x) {
 		x[3][0], x[3][1], x[3][2], x[3][3]);
 }
 
-void SetupGeometry() {
+void SetupConeGeometry() {
 	//
 	// generate cone
 	//
@@ -239,6 +238,125 @@ void SetupSquareGeometry() {
 	glBindVertexArray(0);
 }
 
+
+/*
+Create a simple sphere
+"method" is 0 for quads, 1 for triangles
+(quads look nicer in wireframe mode)/
+*/
+typedef struct {
+	double x, y, z;
+} XYZ;
+#define TWOPI           6.283185307179586476925287
+#define PID2            1.570796326794896619231322
+
+void CreateSimpleSphere(XYZ c, double r, int n)
+{
+	int i, j;
+	double theta1, theta2, theta3;
+	XYZ e, p;
+
+	/*if (r < 0)
+		r = -r;
+	if (n < 0)
+		n = -n;
+	if (n < 4 || r <= 0) {
+		glBegin(GL_POINTS);
+		glVertex3f(c.x, c.y, c.z);
+		glEnd();
+		return;
+	}*/
+
+	for (j = 0; j<n / 2; j++) {
+		theta1 = j * TWOPI / n - PID2;
+		theta2 = (j + 1) * TWOPI / n - PID2;
+
+		/*if (method == 0)
+			glBegin(GL_QUAD_STRIP);
+		else
+			glBegin(GL_TRIANGLE_STRIP);*/
+
+		for (i = 0; i <= n-1; i++) {
+			theta3 = i * TWOPI / n;
+
+			e.x = cos(theta2) * cos(theta3);
+			e.y = sin(theta2);
+			e.z = cos(theta2) * sin(theta3);
+			p.x = c.x + r * e.x;
+			p.y = c.y + r * e.y;
+			p.z = c.z + r * e.z;
+
+			//glNormal3f(e.x, e.y, e.z);
+			//glTexCoord2f(i / (double)n, 2 * (j + 1) / (double)n);
+			Vertex vertex;
+			vertex.color[0] = 0.5f;
+			vertex.color[1] = 0.5f;
+			vertex.color[2] = 0.5f;
+			vertex.position[0] = p.x;
+			vertex.position[1] = p.y;
+			vertex.position[2] = p.z;
+			v.push_back(vertex);
+
+			//glVertex3f(p.x, p.y, p.z);
+
+			e.x = cos(theta1) * cos(theta3);
+			e.y = sin(theta1);
+			e.z = cos(theta1) * sin(theta3);
+			p.x = c.x + r * e.x;
+			p.y = c.y + r * e.y;
+			p.z = c.z + r * e.z;
+
+			//glNormal3f(e.x, e.y, e.z);
+			//glTexCoord2f(i / (double)n, 2 * j / (double)n);
+			//glVertex3f(p.x, p.y, p.z);
+			
+			vertex.color[0] = 0.5f;
+			vertex.color[1] = 0.5f;
+			vertex.color[2] = 0.5f;
+			vertex.position[0] = p.x;
+			vertex.position[1] = p.y;
+			vertex.position[2] = p.z;
+			v.push_back(vertex);
+		}
+		glEnd();
+	}
+}
+
+void SetupSphereGeometry() {
+
+	//
+	// generate cone
+	//
+	XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
+	CreateSimpleSphere(centre, 1, 20);
+
+	printf("Size %d\n", v.size());
+	//
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	/* Allocate and assign One Vertex Buffer Object to our handle */
+	glGenBuffers(1, vbo);
+	/* Bind our VBO as being the active buffer and storing vertex attributes (coordinates + colors) */
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	/* Copy the vertex data from cone to our buffer */
+	/* v,size() * sizeof(GLfloat) is the size of the cone array, since it contains 12 Vertex values */
+	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
+	/* Specify that our coordinate data is going into attribute index 0, and contains three doubles per vertex */
+	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) 0 */
+	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, position));
+	/* Enable attribute index 0 as being used */
+	glEnableVertexAttribArray(0);
+	/* Specify that our color data is going into attribute index 1, and contains three floats per vertex */
+	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) ( 3 * sizeof ( GLdouble ) ) i.e. the size (in bytes)
+	occupied by the first attribute (position) */
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
+																																	 /* Enable attribute index 1 as being used */
+	glEnableVertexAttribArray(1);  /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	glBindVertexArray(0);
+
+	
+}
+
 void SetupShaders(void) {
 	/* Read our shaders into the appropriate buffers */
 	vertexsource = filetobuf("./tutorial3.vert");
@@ -261,6 +379,33 @@ void SetupShaders(void) {
 	glLinkProgram(shaderprogram);  /* Link our program, and set it as being actively used */
 	CheckShader(shaderprogram, "Basic Shader");
 	glUseProgram(shaderprogram);
+}
+
+void RenderLines(int i) {
+	GLfloat angle;
+	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
+	GLfloat t = glfwGetTime();
+	GLfloat p = 400.f;
+	t = fmod(t, p);
+	angle = t * 360.f / p;
+	glm::mat4 View = glm::mat4(1.f);
+	View = glm::translate(View, glm::vec3(0.f, 0.f, -5.0f));
+	View = glm::rotate(View, angle * -1.0f, glm::vec3(1.f, 0.f, 0.f));
+	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 1.f, 0.f));
+	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 0.f, 1.f));
+
+
+	glm::mat4 Model = glm::mat4(1.0f);
+	glm::mat4 MVP = Projection * View * Model;
+
+	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
+	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindVertexArray(vao);
+	glDrawArrays(GL_LINE_STRIP, 0, v.size());
+	glBindVertexArray(0);
+	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 }
 
 void Render(int i) {
@@ -336,14 +481,14 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	fprintf(stderr, "GL INFO %s\n", glGetString(GL_VERSION));
 	glEnable(GL_DEPTH_TEST);
-	SetupGeometry();
+	SetupSphereGeometry();
 	SetupShaders();
 	printf("Ready to render\n");
 
 	glViewport(0, 0, screenWidth, screenHeight);
 
 	while (!glfwWindowShouldClose(window)) {  // Main loop
-		Render(k);        // OpenGL rendering goes here...
+		RenderLines(k);        // OpenGL rendering goes here...
 		k++;
 		glfwSwapBuffers(window);        // Swap front and back rendering buffers
 		glfwPollEvents();         // Poll for events.

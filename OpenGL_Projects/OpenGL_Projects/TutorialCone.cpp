@@ -13,12 +13,16 @@ By consultit@katamail.com
 #include <iostream>
 #include <stdio.h>
 
+#include <cstdlib>
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include <vector>
+
+
+
 ///*
 //*
 //* Include files for Windows, Linux and OSX
@@ -43,6 +47,11 @@ By consultit@katamail.com
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+int renderMode = 1;
+bool pause = false;
+float cameraAngle[3] = { 0,0,0 };
+float cameraRotation[3] = { 0,0,0 };
+float cameraSpeed = 0.01f;
 
 void Check(const char *where) { // Function to check OpenGL error status
 	const char * what;
@@ -276,46 +285,35 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 		else
 			glBegin(GL_TRIANGLE_STRIP);*/
 
+		Vertex vertex;
+
+		float randomColour = (float)(rand()%100)/100.f;
+
+		vertex.color[0] = randomColour;
+		vertex.color[1] = randomColour;
+		vertex.color[2] = randomColour;
+
 		for (i = 0; i <= n-1; i++) {
 			theta3 = i * TWOPI / n;
 
 			e.x = cos(theta2) * cos(theta3);
 			e.y = sin(theta2);
 			e.z = cos(theta2) * sin(theta3);
-			p.x = c.x + r * e.x;
-			p.y = c.y + r * e.y;
-			p.z = c.z + r * e.z;
 
-			//glNormal3f(e.x, e.y, e.z);
-			//glTexCoord2f(i / (double)n, 2 * (j + 1) / (double)n);
-			Vertex vertex;
-			vertex.color[0] = 0.5f;
-			vertex.color[1] = 0.5f;
-			vertex.color[2] = 0.5f;
-			vertex.position[0] = p.x;
-			vertex.position[1] = p.y;
-			vertex.position[2] = p.z;
+			vertex.position[0] = c.x + r * e.x;
+			vertex.position[1] = c.y + r * e.y;
+			vertex.position[2] = c.z + r * e.z;
+
 			v.push_back(vertex);
-
-			//glVertex3f(p.x, p.y, p.z);
 
 			e.x = cos(theta1) * cos(theta3);
 			e.y = sin(theta1);
 			e.z = cos(theta1) * sin(theta3);
-			p.x = c.x + r * e.x;
-			p.y = c.y + r * e.y;
-			p.z = c.z + r * e.z;
-
-			//glNormal3f(e.x, e.y, e.z);
-			//glTexCoord2f(i / (double)n, 2 * j / (double)n);
-			//glVertex3f(p.x, p.y, p.z);
 			
-			vertex.color[0] = 0.5f;
-			vertex.color[1] = 0.5f;
-			vertex.color[2] = 0.5f;
-			vertex.position[0] = p.x;
-			vertex.position[1] = p.y;
-			vertex.position[2] = p.z;
+			vertex.position[0] = c.x + r * e.x;
+			vertex.position[1] = c.y + r * e.y;
+			vertex.position[2] = c.z + r * e.z;
+
 			v.push_back(vertex);
 		}
 		glEnd();
@@ -381,56 +379,72 @@ void SetupShaders(void) {
 	glUseProgram(shaderprogram);
 }
 
-void RenderLines(int i) {
-	GLfloat angle;
-	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
-	GLfloat t = glfwGetTime();
-	GLfloat p = 400.f;
-	t = fmod(t, p);
-	angle = t * 360.f / p;
-	glm::mat4 View = glm::mat4(1.f);
-	View = glm::translate(View, glm::vec3(0.f, 0.f, -5.0f));
-	View = glm::rotate(View, angle * -1.0f, glm::vec3(1.f, 0.f, 0.f));
-	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 1.f, 0.f));
-	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 0.f, 1.f));
-
-
-	glm::mat4 Model = glm::mat4(1.0f);
-	glm::mat4 MVP = Projection * View * Model;
-
-	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
-	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(vao);
-	glDrawArrays(GL_LINE_STRIP, 0, v.size());
-	glBindVertexArray(0);
-	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
-}
+//void RenderLines(int i) {
+//	GLfloat angle;
+//	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
+//	GLfloat t = glfwGetTime();
+//	GLfloat p = 400.f;
+//	t = fmod(t, p);
+//	angle = t * 360.f / p;
+//	glm::mat4 View = glm::mat4(1.f);
+//	View = glm::translate(View, glm::vec3(0.f, 0.f, -5.0f));
+//	View = glm::rotate(View, angle * -1.0f, glm::vec3(1.f, 0.f, 0.f));
+//	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 1.f, 0.f));
+//	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 0.f, 1.f));
+//
+//
+//	glm::mat4 Model = glm::mat4(1.0f);
+//	glm::mat4 MVP = Projection * View * Model;
+//
+//	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
+//	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
+//	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
+//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	glBindVertexArray(vao);
+//	glDrawArrays(GL_LINE_STRIP, 0, v.size());
+//	glBindVertexArray(0);
+//	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
+//}
 
 void Render(int i) {
 	GLfloat angle;
 	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
 	GLfloat t = glfwGetTime();
+	printf("%f\n", glfwGetTime());
 	GLfloat p = 400.f;
 	t = fmod(t, p);
 	angle = t * 360.f / p;
 	glm::mat4 View = glm::mat4(1.f);
+
+	cameraAngle[0] += cameraRotation[0];
+	cameraAngle[1] += cameraRotation[1];
+	cameraAngle[2] += cameraRotation[2];
+
 	View = glm::translate(View, glm::vec3(0.f, 0.f, -5.0f));
-	View = glm::rotate(View, angle * -1.0f, glm::vec3(1.f, 0.f, 0.f));
-	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 1.f, 0.f));
-	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 0.f, 1.f));
+	View = glm::rotate(View, (cameraAngle[0] * 360.f)/p, glm::vec3(1.f, 0.f, 0.f));
+	View = glm::rotate(View, (cameraAngle[1] * 360.f) / p, glm::vec3(0.f, 1.f, 0.f));
+	View = glm::rotate(View, (cameraAngle[2] * 360.f) / p, glm::vec3(0.f, 0.f, 1.f));
 
 
 	glm::mat4 Model = glm::mat4(1.0f);
 	glm::mat4 MVP = Projection * View * Model;
+
+	GLenum mode = NULL;
+	switch (renderMode) {
+	case 1:
+		mode = GL_LINE_STRIP;
+		break;
+	case 2:
+		mode = GL_QUADS;
+		break;
+	}
 
 	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
 	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, v.size());
+	glDrawArrays(mode, 0, v.size());
 	glBindVertexArray(0);
 	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 }
@@ -438,6 +452,26 @@ void Render(int i) {
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if ((key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q) && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
+	// Mode controls
+	else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+		renderMode = 1;
+	else if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+		renderMode = 2;
+
+	else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+		cameraRotation[1] = cameraSpeed;
+	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+		cameraRotation[1] = -cameraSpeed;
+	else if (key == GLFW_KEY_W && action == GLFW_PRESS)
+		cameraRotation[0] = cameraSpeed;
+	else if (key == GLFW_KEY_X && action == GLFW_PRESS)
+		cameraRotation[0] = -cameraSpeed;
+	else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+		cameraRotation[0] = 0.f;
+		cameraRotation[1] = 0.f;
+		cameraRotation[2] = 0.f;
+	}
 }
 
 void init() {
@@ -488,7 +522,7 @@ int main() {
 	glViewport(0, 0, screenWidth, screenHeight);
 
 	while (!glfwWindowShouldClose(window)) {  // Main loop
-		RenderLines(k);        // OpenGL rendering goes here...
+		Render(k);        // OpenGL rendering goes here...
 		k++;
 		glfwSwapBuffers(window);        // Swap front and back rendering buffers
 		glfwPollEvents();         // Poll for events.

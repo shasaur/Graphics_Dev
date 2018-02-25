@@ -110,6 +110,11 @@ struct Vertex {
 	GLfloat position[3];
 	GLfloat color[3];
 };
+
+struct Triangle {
+	Vertex vertices[3];
+};
+
 /* These pointers will receive the contents of our shader source code files */
 GLchar *vertexsource, *fragmentsource;
 /* These are handles used to reference the shaders */
@@ -117,7 +122,9 @@ GLuint vertexshader, fragmentshader;
 /* This is a handle to the shader program */
 GLuint shaderprogram;
 GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex Buffer Object */
+
 std::vector<Vertex> v;
+std::vector<Triangle> t;
 
 void Print(glm::mat4 x) {
 	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
@@ -276,7 +283,9 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 		return;
 	}*/
 
-	for (j = 0; j<n / 2; j++) {
+
+	// vertical
+	for (j = 0; j<n/2; j++) {
 		theta1 = j * TWOPI / n - PID2;
 		theta2 = (j + 1) * TWOPI / n - PID2;
 
@@ -285,36 +294,82 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 		else
 			glBegin(GL_TRIANGLE_STRIP);*/
 
-		Vertex vertex;
+		
 
-		float randomColour = (float)(rand()%100)/100.f;
+		// horizontal
+		for (i = 0; i <= n; i++) {
+			Triangle triangle;
 
-		vertex.color[0] = randomColour;
-		vertex.color[1] = randomColour;
-		vertex.color[2] = randomColour;
+			Vertex v1;
+			v1.color[0] = (float)(rand() % 100) / 100.f;
+			v1.color[1] = (float)(rand() % 100) / 100.f;
+			v1.color[2] = (float)(rand() % 100) / 100.f;
+			
 
-		for (i = 0; i <= n-1; i++) {
 			theta3 = i * TWOPI / n;
 
 			e.x = cos(theta2) * cos(theta3);
 			e.y = sin(theta2);
 			e.z = cos(theta2) * sin(theta3);
 
-			vertex.position[0] = c.x + r * e.x;
-			vertex.position[1] = c.y + r * e.y;
-			vertex.position[2] = c.z + r * e.z;
+			v1.position[0] = c.x + r * e.x;
+			v1.position[1] = c.y + r * e.y;
+			v1.position[2] = c.z + r * e.z;
 
-			v.push_back(vertex);
+			Vertex v2;
+			v2.color[0] = v1.color[0];
+			v2.color[1] = v1.color[1];
+			v2.color[2] = v1.color[2];
 
 			e.x = cos(theta1) * cos(theta3);
 			e.y = sin(theta1);
 			e.z = cos(theta1) * sin(theta3);
 			
-			vertex.position[0] = c.x + r * e.x;
-			vertex.position[1] = c.y + r * e.y;
-			vertex.position[2] = c.z + r * e.z;
+			v2.position[0] = c.x + r * e.x;
+			v2.position[1] = c.y + r * e.y;
+			v2.position[2] = c.z + r * e.z;
 
-			v.push_back(vertex);
+			Vertex v3;
+			v3.color[0] = v1.color[0];
+			v3.color[1] = v1.color[1];
+			v3.color[2] = v1.color[2];
+
+			theta3 = (i+1) * TWOPI / n;
+
+			e.x = cos(theta2) * cos(theta3);
+			e.y = sin(theta2);
+			e.z = cos(theta2) * sin(theta3);
+
+			v3.position[0] = c.x + r * e.x;
+			v3.position[1] = c.y + r * e.y;
+			v3.position[2] = c.z + r * e.z;
+
+			//triangle.vertices[0] = v1;
+			//triangle.vertices[1] = v2;
+			//triangle.vertices[2] = v3;
+			//t.push_back(triangle);
+
+			Vertex v4;
+			v4.color[0] = v1.color[0];
+			v4.color[1] = v1.color[1];
+			v4.color[2] = v1.color[2];
+
+			e.x = cos(theta1) * cos(theta3);
+			e.y = sin(theta1);
+			e.z = cos(theta1) * sin(theta3);
+
+			v4.position[0] = c.x + r * e.x;
+			v4.position[1] = c.y + r * e.y;
+			v4.position[2] = c.z + r * e.z;
+
+
+			v.push_back(v1);
+			v.push_back(v2);
+			v.push_back(v3);
+
+			v.push_back(v2);
+			v.push_back(v3);
+			v.push_back(v4);
 		}
 		glEnd();
 	}
@@ -432,10 +487,10 @@ void Render(int i) {
 	GLenum mode = NULL;
 	switch (renderMode) {
 	case 1:
-		mode = GL_LINE_STRIP;
+		mode = GL_LINES;
 		break;
 	case 2:
-		mode = GL_QUADS;
+		mode = GL_TRIANGLES;
 		break;
 	}
 
@@ -444,6 +499,9 @@ void Render(int i) {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glBindVertexArray(vao);
+
+
+
 	glDrawArrays(mode, 0, v.size());
 	glBindVertexArray(0);
 	/* Invoke glDrawArrays telling that our data consists of a triangle fan */

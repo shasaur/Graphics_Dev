@@ -16,7 +16,7 @@ void main(void) {
 	vec3 lightDirection = normalize(vec3(0.0,0.0,1.0));
 	vec3 normalDirection = normalize(in_Position);
 
-	vec3 diffuseReflection2 = vec3(1.0, 1.0, 1.0) * max(0.0, dot(normalDirection, lightDirection));
+	vec3 diffuseReflection2 = in_Color * max(0.0, dot(normalDirection, lightDirection));
 
 	vec3 diffuseReflection = normalize(vec3(1.0,1.0,1.0));
 

@@ -109,6 +109,7 @@ char* filetobuf(char *file) { /* A simple function that will read a file into an
 struct Vertex {
 	GLfloat position[3];
 	GLfloat color[3];
+	GLfloat normal[3];
 };
 
 struct Triangle {
@@ -254,7 +255,6 @@ void SetupSquareGeometry() {
 	glBindVertexArray(0);
 }
 
-
 /*
 Create a simple sphere
 "method" is 0 for quads, 1 for triangles
@@ -316,6 +316,10 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 			v1.position[1] = c.y + r * e.y;
 			v1.position[2] = c.z + r * e.z;
 
+			v1.normal[0] = v1.position[0] - c.x;
+			v1.normal[1] = v1.position[1] - c.y;
+			v1.normal[2] = v1.position[2] - c.z;
+
 			Vertex v2;
 			v2.color[0] = v1.color[0];
 			v2.color[1] = v1.color[1];
@@ -328,6 +332,10 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 			v2.position[0] = c.x + r * e.x;
 			v2.position[1] = c.y + r * e.y;
 			v2.position[2] = c.z + r * e.z;
+
+			v2.normal[0] = v2.position[0] - c.x;
+			v2.normal[1] = v2.position[1] - c.y;
+			v2.normal[2] = v2.position[2] - c.z;
 
 			Vertex v3;
 			v3.color[0] = v1.color[0];
@@ -343,6 +351,10 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 			v3.position[0] = c.x + r * e.x;
 			v3.position[1] = c.y + r * e.y;
 			v3.position[2] = c.z + r * e.z;
+			
+			v3.normal[0] = v3.position[0] - c.x;
+			v3.normal[1] = v3.position[1] - c.y;
+			v3.normal[2] = v3.position[2] - c.z;
 
 			//triangle.vertices[0] = v1;
 			//triangle.vertices[1] = v2;
@@ -361,6 +373,10 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 			v4.position[0] = c.x + r * e.x;
 			v4.position[1] = c.y + r * e.y;
 			v4.position[2] = c.z + r * e.z;
+
+			v4.normal[0] = v4.position[0] - c.x;
+			v4.normal[1] = v4.position[1] - c.y;
+			v4.normal[2] = v4.position[2] - c.z;
 
 
 			v.push_back(v1);
@@ -406,10 +422,14 @@ void SetupSphereGeometry() {
 		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
 	
 	// colour data will be in attribute index 1, and the remaining characteristics to read the data
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
-																							
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );								
 	/* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
-	glEnableVertexAttribArray(1);  
+	glEnableVertexAttribArray(1);
+
+	// normal data will be in attribute index 2
+	glVertexAttribPointer((GLuint)2, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, normal));   // bug );
+	glEnableVertexAttribArray(2);
+
 	glBindVertexArray(0);
 }
 

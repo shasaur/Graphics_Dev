@@ -384,30 +384,33 @@ void SetupSphereGeometry() {
 	CreateSimpleSphere(centre, 1, 20);
 
 	printf("Size %d\n", v.size());
-	//
+	
+	/* Creating a VAO and setting it as the current one
+		VAO - Vertex Array Object holds information about how
+		vertex data should be stored in the Vertex Buffer Object (VBO)*/
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	/* Allocate and assign One Vertex Buffer Object to our handle */
-	glGenBuffers(1, vbo);
-	/* Bind our VBO as being the active buffer and storing vertex attributes (coordinates + colors) */
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	/* Copy the vertex data from cone to our buffer */
-	/* v,size() * sizeof(GLfloat) is the size of the cone array, since it contains 12 Vertex values */
-	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
-	/* Specify that our coordinate data is going into attribute index 0, and contains three doubles per vertex */
-	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) 0 */
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, position));
-	/* Enable attribute index 0 as being used */
-	glEnableVertexAttribArray(0);
-	/* Specify that our color data is going into attribute index 1, and contains three floats per vertex */
-	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) ( 3 * sizeof ( GLdouble ) ) i.e. the size (in bytes)
-	occupied by the first attribute (position) */
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
-																																	 /* Enable attribute index 1 as being used */
-	glEnableVertexAttribArray(1);  /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
-	glBindVertexArray(0);
 
+	// Generate an identifier to use for the Vertex Buffer Object, store it in vbo
+	glGenBuffers(1, vbo);
+	// Make this identifier the active one (storing vertex attributes)
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	// Give vertex data in v to the Vertex Buffer Object in OpenGL
+	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer((GLuint)0, // coordinate data will be in attribute index 0
+		3, GL_FLOAT,	// use 3 decimals to represent a vertex
+		GL_FALSE,		// not normalised
+		sizeof(struct Vertex),	// stride (aka memory to jump to get to the next vertex)
+		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
 	
+	// colour data will be in attribute index 1, and the remaining characteristics to read the data
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
+																							
+	/* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	glEnableVertexAttribArray(1);  
+	glBindVertexArray(0);
 }
 
 void SetupShaders(void) {

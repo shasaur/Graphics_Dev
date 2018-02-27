@@ -1,51 +1,4 @@
-/*
-This is a variation of tutorial3 using a single VBO for specifying the vertex
-attribute data; it is done by setting the VertexAttribPointer parameters
-"stride" and "pointer" to suitable values.
-In particular for the pointer parameter, macro "offsetof" should be used so to
-avoid problem with alignment and padding for different architecture.
-
-Modified to use GLM
-
-By consultit@katamail.com
-
-*/
-#include <iostream>
-#include <stdio.h>
-
-#include <cstdlib>
-#include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <vector>
-
-
-
-///*
-//*
-//* Include files for Windows, Linux and OSX
-//* __APPLE is defined if OSX, otherwise Windows and Linux.
-//*
-//*/
-//
-//#ifdef __APPLE__
-//#define GLFW_INCLUDE_GLCOREARB 1
-//#include <GLFW/glfw3.h>
-//#else
-//#include <GL/glew.h>
-//#include <GLFW/glfw3.h>
-//#endif
-
-
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "cw1.h"
 
 int renderMode = 1;
 bool pause = false;
@@ -107,15 +60,11 @@ char* filetobuf(char *file) { /* A simple function that will read a file into an
 }
 
 
-struct Vertex {
-	GLfloat position[3];
-	GLfloat color[3];
-	GLfloat normal[3];
-};
 
-struct Triangle {
-	Vertex vertices[3];
-};
+//
+//struct Triangle {
+//	Vertex vertices[3];
+//};
 
 /* These pointers will receive the contents of our shader source code files */
 GLchar *vertexsource, *fragmentsource;
@@ -126,7 +75,6 @@ GLuint shaderprogram;
 GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex Buffer Object */
 
 std::vector<Vertex> v;
-std::vector<Triangle> t;
 
 void Print(glm::mat4 x) {
 	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
@@ -141,6 +89,10 @@ void SetupConeGeometry() {
 	//
 	// generate cone
 	//
+
+	Vertex centre;
+	//setPosition(centre, 0, 0, 0);
+
 	GLfloat cf = 0.0;
 	Vertex t;
 	t.position[0] = 0;
@@ -162,6 +114,7 @@ void SetupConeGeometry() {
 		t.position[0] = c; //width
 		t.position[1] = s; //height
 		t.position[2] = 2.0f; //length: set to 0.0 for a circle (flat), >= 1.0 for a cone.
+		//setNormal(t, t.position[0] - centre.position[0], t.position[1] - centre.position[1], t.position[2] - centre.position[2]);
 
 		t.color[0] = cf;
 		cf = 1. - cf;
@@ -267,30 +220,6 @@ typedef struct {
 #define TWOPI           6.283185307179586476925287
 #define PID2            1.570796326794896619231322
 
-void randomiseColour(Vertex &vertex) {
-	vertex.color[0] = (float)(rand() % 100) / 100.f;
-	vertex.color[1] = (float)(rand() % 100) / 100.f;
-	vertex.color[2] = (float)(rand() % 100) / 100.f;
-}
-
-void setColour(Vertex &vertex, Vertex &sampleVertex) {
-	vertex.color[0] = sampleVertex.color[0];
-	vertex.color[1] = sampleVertex.color[1];
-	vertex.color[2] = sampleVertex.color[2];
-}
-
-void setPosition(Vertex &vertex, GLfloat x, GLfloat y, GLfloat z) {
-	vertex.position[0] = x;
-	vertex.position[1] = y;
-	vertex.position[2] = z;
-}
-
-void setNormal(Vertex &vertex, GLfloat x, GLfloat y, GLfloat z) {
-	vertex.normal[0] = x;
-	vertex.normal[1] = y;
-	vertex.normal[2] = z;
-}
-
 void CreateSimpleSphere(XYZ c, double r, int n)
 {
 	int i, j;
@@ -321,8 +250,6 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 
 		// horizontal
 		for (i = 0; i <= n; i++) {
-			Triangle triangle;
-
 			Vertex v1;
 			randomiseColour(v1);
 
@@ -602,6 +529,7 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	fprintf(stderr, "GL INFO %s\n", glGetString(GL_VERSION));
 	glEnable(GL_DEPTH_TEST);
+	//SetupConeGeometry();
 	SetupSphereGeometry();
 	SetupShaders();
 	printf("Ready to render\n");

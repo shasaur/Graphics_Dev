@@ -7,6 +7,12 @@ void randomiseColour(Vertex &vertex) {
 	vertex.color[2] = (float)(rand() % 100) / 100.f;
 }
 
+void setColour(Vertex &vertex, GLfloat r, GLfloat g, GLfloat b) {
+	vertex.color[0] = r;
+	vertex.color[1] = g;
+	vertex.color[2] = b;
+}
+
 void setColour(Vertex &vertex, Vertex &sampleVertex) {
 	vertex.color[0] = sampleVertex.color[0];
 	vertex.color[1] = sampleVertex.color[1];

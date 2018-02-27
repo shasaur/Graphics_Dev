@@ -76,6 +76,17 @@ GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex
 
 std::vector<Vertex> v;
 
+/*
+Create a simple sphere
+"method" is 0 for quads, 1 for triangles
+(quads look nicer in wireframe mode)/
+*/
+typedef struct {
+	double x, y, z;
+} XYZ;
+#define TWOPI           6.283185307179586476925287
+#define PID2            1.570796326794896619231322
+
 void Print(glm::mat4 x) {
 	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
 	printf("\n[[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]]\n",
@@ -85,68 +96,86 @@ void Print(glm::mat4 x) {
 		x[3][0], x[3][1], x[3][2], x[3][3]);
 }
 
-void SetupConeGeometry() {
-	//
-	// generate cone
-	//
+void Print(GLfloat* position) {
+	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
+}
 
-	Vertex centre;
-	//setPosition(centre, 0, 0, 0);
+void CreateCone(GLfloat c[3]) {
 
 	GLfloat cf = 0.0;
-	Vertex t;
-	t.position[0] = 0;
-	t.position[1] = 0;
-	t.position[2] = 0;
-	t.color[0] = cf;
+	Vertex top_v;
+	top_v.position[0] = 0;
+	top_v.position[1] = 0;
+	top_v.position[2] = 0;
+	top_v.color[0] = cf;
 	cf = 1. - cf;
-	t.color[1] = cf;
+	top_v.color[1] = cf;
 	cf = 1. - cf;
-	t.color[2] = cf;
+	top_v.color[2] = cf;
 	cf = 1. - cf;
-	v.push_back(t); // Apex
+
+
 	GLint lod = 32;
 	GLfloat step = 2.f * 3.141596f / GLfloat(lod);
 	GLfloat Radius = 1.f;
 	for (GLfloat a = 0; a <= (2.f * 3.141596f + step); a += step) {
-		GLfloat c = Radius * cos(a);
-		GLfloat s = Radius * sin(a);
-		t.position[0] = c; //width
-		t.position[1] = s; //height
-		t.position[2] = 2.0f; //length: set to 0.0 for a circle (flat), >= 1.0 for a cone.
-		//setNormal(t, t.position[0] - centre.position[0], t.position[1] - centre.position[1], t.position[2] - centre.position[2]);
 
-		t.color[0] = cf;
+		Vertex v1;
+		setPosition(v1, Radius * cos(a), Radius * sin(a), 2.0f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
+		v1.color[0] = cf;
 		cf = 1. - cf;
-		t.color[1] = cf;
+		v1.color[1] = cf;
 		cf = 1. - cf;
-		t.color[2] = cf;
+		v1.color[2] = cf;
 		cf = 1. - cf;
-		v.push_back(t);
+
+		Vertex v2;
+		setPosition(v2, Radius * cos(a + step), Radius * sin(a + step), 2.0f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
+		v2.color[0] = cf;
+		cf = 1. - cf;
+		v2.color[1] = cf;
+		cf = 1. - cf;
+		v2.color[2] = cf;
+
+		// Triangle
+		v.push_back(v1);
+		v.push_back(v2);
+		v.push_back(top_v); // Apex
 	}
+}
 
-	printf("Size %d\n", v.size());
+void SetupGeometry() {
+	//
+	// generate cone
 	//
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	/* Allocate and assign One Vertex Buffer Object to our handle */
+
+	// Generate an identifier to use for the Vertex Buffer Object, store it in vbo
 	glGenBuffers(1, vbo);
-	/* Bind our VBO as being the active buffer and storing vertex attributes (coordinates + colors) */
+	// Make this identifier the active one (storing vertex attributes)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	/* Copy the vertex data from cone to our buffer */
-	/* v,size() * sizeof(GLfloat) is the size of the cone array, since it contains 12 Vertex values */
+	// Give vertex data in v to the Vertex Buffer Object in OpenGL
 	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
-	/* Specify that our coordinate data is going into attribute index 0, and contains three doubles per vertex */
-	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) 0 */
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, position));
-	/* Enable attribute index 0 as being used */
+
 	glEnableVertexAttribArray(0);
-	/* Specify that our color data is going into attribute index 1, and contains three floats per vertex */
-	/* Note stride = sizeof ( struct Vertex ) and pointer = ( const GLvoid* ) ( 3 * sizeof ( GLdouble ) ) i.e. the size (in bytes)
-	occupied by the first attribute (position) */
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
-																																	 /* Enable attribute index 1 as being used */
-	glEnableVertexAttribArray(1);  /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	glVertexAttribPointer((GLuint)0, // coordinate data will be in attribute index 0
+		3, GL_FLOAT,	// use 3 decimals to represent a vertex
+		GL_FALSE,		// not normalised
+		sizeof(struct Vertex),	// stride (aka memory to jump to get to the next vertex)
+		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
+
+															// colour data will be in attribute index 1, and the remaining characteristics to read the data
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );								
+																																	 /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	glEnableVertexAttribArray(1);
+
+	// normal data will be in attribute index 2
+	glVertexAttribPointer((GLuint)2, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, normal));   // bug );
+	glEnableVertexAttribArray(2);
+
 	glBindVertexArray(0);
 }
 
@@ -208,17 +237,6 @@ void SetupSquareGeometry() {
 	glEnableVertexAttribArray(1);  /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
 	glBindVertexArray(0);
 }
-
-/*
-Create a simple sphere
-"method" is 0 for quads, 1 for triangles
-(quads look nicer in wireframe mode)/
-*/
-typedef struct {
-	double x, y, z;
-} XYZ;
-#define TWOPI           6.283185307179586476925287
-#define PID2            1.570796326794896619231322
 
 void CreateSimpleSphere(XYZ c, double r, int n)
 {
@@ -309,50 +327,6 @@ void CreateSimpleSphere(XYZ c, double r, int n)
 		}
 		glEnd();
 	}
-}
-
-void SetupSphereGeometry() {
-
-	//
-	// generate cone
-	//
-	XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
-	CreateSimpleSphere(centre, 1, 20);
-	centre.x = 5.f; centre.y = 0.f; centre.z = 0.f;
-	CreateSimpleSphere(centre, 1, 20);
-
-	printf("Size %d\n", v.size());
-	
-	/* Creating a VAO and setting it as the current one
-		VAO - Vertex Array Object holds information about how
-		vertex data should be stored in the Vertex Buffer Object (VBO)*/
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	// Generate an identifier to use for the Vertex Buffer Object, store it in vbo
-	glGenBuffers(1, vbo);
-	// Make this identifier the active one (storing vertex attributes)
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	// Give vertex data in v to the Vertex Buffer Object in OpenGL
-	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer((GLuint)0, // coordinate data will be in attribute index 0
-		3, GL_FLOAT,	// use 3 decimals to represent a vertex
-		GL_FALSE,		// not normalised
-		sizeof(struct Vertex),	// stride (aka memory to jump to get to the next vertex)
-		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
-	
-	// colour data will be in attribute index 1, and the remaining characteristics to read the data
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );								
-	/* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
-	glEnableVertexAttribArray(1);
-
-	// normal data will be in attribute index 2
-	glVertexAttribPointer((GLuint)2, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, normal));   // bug );
-	glEnableVertexAttribArray(2);
-
-	glBindVertexArray(0);
 }
 
 void SetupShaders(void) {
@@ -451,6 +425,18 @@ void Render(int i) {
 	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 }
 
+void SetupScenes() {
+	/*XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
+	CreateSimpleSphere(centre, 1, 20);
+	centre.x = 5.f; centre.y = 0.f; centre.z = 0.f;
+	CreateSimpleSphere(centre, 1, 20);
+
+	printf("Size %d\n", v.size());*/
+
+	GLfloat center[3] = { 0.f, 0.f, 0.f };
+	CreateCone(center);
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if ((key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q) && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
@@ -529,8 +515,10 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	fprintf(stderr, "GL INFO %s\n", glGetString(GL_VERSION));
 	glEnable(GL_DEPTH_TEST);
-	//SetupConeGeometry();
-	SetupSphereGeometry();
+
+	SetupScenes();
+	SetupGeometry();
+
 	SetupShaders();
 	printf("Ready to render\n");
 

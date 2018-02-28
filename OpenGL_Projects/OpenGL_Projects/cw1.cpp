@@ -100,6 +100,77 @@ void Print(GLfloat* position) {
 	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
 }
 
+void CreateCylinder(GLfloat c[3]) {
+	GLfloat cf = 0.0;
+	Vertex top_v;
+	top_v.position[0] = 0;
+	top_v.position[1] = 0;
+	top_v.position[2] = 0;
+	top_v.color[0] = cf;
+	cf = 1. - cf;
+	top_v.color[1] = cf;
+	cf = 1. - cf;
+	top_v.color[2] = cf;
+	cf = 1. - cf;
+
+
+	GLint lod = 32;
+	GLfloat step = 2.f * 3.141596f / GLfloat(lod);
+	GLfloat Radius = 1.f;
+	for (GLfloat a = 0; a <= (2.f * 3.141596f + step); a += step) {
+
+		Vertex v1;
+		setPosition(v1, Radius * cos(a), Radius * sin(a), 0.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
+		v1.color[0] = cf;
+		cf = 1. - cf;
+		v1.color[1] = cf;
+		cf = 1. - cf;
+		v1.color[2] = cf;
+		cf = 1. - cf;
+
+		Vertex v2;
+		setPosition(v2, Radius * cos(a + step), Radius * sin(a + step), 0.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
+		v2.color[0] = cf;
+		cf = 1. - cf;
+		v2.color[1] = cf;
+		cf = 1. - cf;
+		v2.color[2] = cf;
+
+		Vertex v3;
+		setPosition(v3, Radius * cos(a), Radius * sin(a), 2.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v3, v3.position[0] - c[0], v3.position[1] - c[1], v3.position[2] - c[2]);
+		v3.color[0] = v1.color[0];
+		v3.color[1] = v1.color[1];
+		v3.color[2] = v1.color[2];
+
+		Vertex v4;
+		setPosition(v4, Radius * cos(a + step), Radius * sin(a + step), 2.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		setNormal(v4, v4.position[0] - c[0], v4.position[1] - c[1], v4.position[2] - c[2]);
+		v4.color[0] = v2.color[0];
+		v4.color[1] = v2.color[1];
+		v4.color[2] = v2.color[2];
+
+		Print(v1.position);
+		Print(v2.position);
+		Print(v3.position);
+		Print(v4.position);
+
+		// Triangle
+		v.push_back(v1);
+		v.push_back(v2);
+		v.push_back(v3);
+
+		v.push_back(v2);
+		v.push_back(v3);
+		v.push_back(v4);
+
+
+		//v.push_back(top_v); // Apex
+	}
+}
+
 void CreateCone(GLfloat c[3]) {
 
 	GLfloat cf = 0.0;
@@ -405,7 +476,7 @@ void Render(int i) {
 	GLenum mode = NULL;
 	switch (renderMode) {
 	case 1:
-		mode = GL_LINES;
+		mode = GL_LINE_STRIP;
 		break;
 	case 2:
 		mode = GL_TRIANGLES;
@@ -426,15 +497,18 @@ void Render(int i) {
 }
 
 void SetupScenes() {
-	/*XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
+	XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
 	CreateSimpleSphere(centre, 1, 20);
 	centre.x = 5.f; centre.y = 0.f; centre.z = 0.f;
 	CreateSimpleSphere(centre, 1, 20);
 
-	printf("Size %d\n", v.size());*/
+	printf("Size %d\n", v.size());
 
 	GLfloat center[3] = { 0.f, 0.f, 0.f };
 	CreateCone(center);
+
+	/*GLfloat center[3] = { 0.f, 0.f, 0.f };
+	CreateCylinder(center);*/
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {

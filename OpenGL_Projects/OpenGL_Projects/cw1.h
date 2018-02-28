@@ -24,4 +24,6 @@
 
 #include "Vertex.h"
 
+void CreateCone(GLfloat c[3], GLfloat, GLfloat n[3]);
+
 #endif /* CW1_H */

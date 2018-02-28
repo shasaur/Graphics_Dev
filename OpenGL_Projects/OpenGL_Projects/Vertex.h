@@ -14,6 +14,7 @@ struct Vertex {
 
 
 void randomiseColour(Vertex &vertex);
+void setColour(Vertex &vertex, GLfloat r, GLfloat g, GLfloat b);
 void setColour(Vertex &vertex, Vertex &sampleVertex);
 void setPosition(Vertex &vertex, GLfloat x, GLfloat y, GLfloat z);
 void setNormal(Vertex &vertex, GLfloat x, GLfloat y, GLfloat z);

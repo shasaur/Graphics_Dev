@@ -1,19 +1,11 @@
 #include "entity.h"
 
-//class Entity {
-//	glm::vec3 position;
-//	glm::vec3 size;
-//	glm::vec3 angle;
-//
-//	std::vector<Vertex> v;
-//
-//
-	//enum Shape { Sphere, Cone, Cylinder, Cube };
-
 Entity::Entity(Shape shape) {
 	position = glm::vec3(0.f, 0.f, 0.f);
 	size = glm::vec3(1.f, 1.f, 1.f);
 	angle = glm::vec3(0.f, 0.f, 0.f);
+
+	wiremesh = false;
 
 	switch (shape) {
 	case Shape::Cone:
@@ -24,15 +16,17 @@ Entity::Entity(Shape shape) {
 	{break; };
 	case Shape::Sphere:
 	{
-		CreateSimpleSphere(position, size.x, 10);
+		CreateSimpleSphere(position, size.x, 10, false);
 		break;};
 	}
 }
 
-Entity::Entity(Shape shape, glm::vec3 p, glm::vec3 s, glm::vec3 a, int res) {
+Entity::Entity(Shape shape, glm::vec3 p, glm::vec3 s, glm::vec3 a, int res, bool w) {
 	position = p;
 	size = s;
 	angle = a;
+
+	wiremesh = w;
 
 	switch (shape) {
 	case Shape::Cone:
@@ -42,12 +36,12 @@ Entity::Entity(Shape shape, glm::vec3 p, glm::vec3 s, glm::vec3 a, int res) {
 	case Shape::Cylinder:
 	{break; };
 	case Shape::Sphere:{
-		CreateSimpleSphere(position, 1.f, res);
+		CreateSimpleSphere(position, 1.f, res, w);
 		break; };
 	}
 }
 
-void Entity::CreateSimpleSphere(glm::vec3 c, double r, int n)
+void Entity::CreateSimpleSphere(glm::vec3 c, double r, int n, bool wiremesh)
 {
 	int i, j;
 	double theta1, theta2, theta3;
@@ -101,14 +95,21 @@ void Entity::CreateSimpleSphere(glm::vec3 c, double r, int n)
 			setPosition(v4, c.x + r * e.x, c.y + r * e.y, c.z + r * e.z);
 			setNormal(v4, v4.position[0] - c.x, v4.position[1] - c.y, v4.position[2] - c.z);
 
+			if (wiremesh) {
+				v.push_back(v1);
+				v.push_back(v2);
+				v.push_back(v4);
+				v.push_back(v3);
+			}
+			else {
+				v.push_back(v1);
+				v.push_back(v2);
+				v.push_back(v3);
 
-			v.push_back(v1);
-			v.push_back(v2);
-			v.push_back(v3);
-
-			v.push_back(v2);
-			v.push_back(v3);
-			v.push_back(v4);
+				v.push_back(v2);
+				v.push_back(v3);
+				v.push_back(v4);
+			}
 		}
 		glEnd();
 	}
@@ -161,4 +162,3 @@ void Entity::add_my_vertices(std::vector<Vertex> &vertices) {
 	for (int i = 0; i < v.size(); i++)
 		vertices.push_back(v.at(i));
 }
-//};

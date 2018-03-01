@@ -1,11 +1,8 @@
 #include "cw1.h"
 
+
 int renderMode = 1;
 bool pause = false;
-float cameraAngle[3] = { 0,0,0 };
-float cameraRotation[3] = { 0,0,0 };
-float cameraSpeed = 0.01f;
-glm::vec3 cameraPosition;
 
 void Check(const char *where) { // Function to check OpenGL error status
 	const char * what;
@@ -69,16 +66,18 @@ GLuint shaderprogram;
 GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex Buffer Object */
 
 std::vector<Vertex> v;
-std::vector<Entity> en;
 
-/*
-Create a simple sphere
-"method" is 0 for quads, 1 for triangles
-(quads look nicer in wireframe mode)/
-*/
-typedef struct {
-	double x, y, z;
-} XYZ;
+Scene* scenes[4];
+int current_scene = 0;
+
+///*
+//Create a simple sphere
+//"method" is 0 for quads, 1 for triangles
+//(quads look nicer in wireframe mode)/
+//*/
+//typedef struct {
+//	double x, y, z;
+//} XYZ;
 
 void Print(glm::mat4 x) {
 	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
@@ -235,10 +234,34 @@ void CreateCone(GLfloat c[3], GLfloat height, GLfloat n[3]) {
 	}
 }
 
-void SetupGeometry() {
-	//
-	// generate cone
-	//
+void SetupScenes() {
+	scenes[0] = new Scene();
+	scenes[1] = new Scene();
+
+	Entity e1(Entity::Sphere, glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.5f, 1.5f, 1.5f), glm::vec3(0.f, 0.f, 0.f), 40, true);
+	scenes[0]->AddEntity(e1);
+
+	Entity e2(Entity::Sphere, glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), 40, false);
+	scenes[1]->AddEntity(e2);
+
+	//e1.CreateSimpleSphere(centre, 1, 20);
+	//center.x = 5.f; center.y = 0.f; center.z = 0.f;
+	//CreateSimpleSphere(centre, 1, 20);
+
+	//printf("Size %d\n", v.size());
+
+	//GLfloat center[3] = { 0.f, 0.f, 0.f };
+	//CreateCone(center, 2.0f);
+
+	//GLfloat center[3] = { 0.f, 0.f, 0.f };
+	//CreateCylinder(center, true);
+}
+
+void FreeGeometry() {
+	glDeleteBuffers(1, vbo);
+}
+
+void SetupGeometry(int sceneID) {
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
@@ -247,8 +270,9 @@ void SetupGeometry() {
 	// Make this identifier the active one (storing vertex attributes)
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	// Give vertex data in v to the Vertex Buffer Object in OpenGL
-	glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(struct Vertex), v.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, scenes[sceneID]->v.size() * sizeof(struct Vertex), scenes[sceneID]->v.data(), GL_STATIC_DRAW);
 
+	// usual setting up of memory locations to cycle through for attributes of vertices during rendering
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer((GLuint)0, // coordinate data will be in attribute index 0
 		3, GL_FLOAT,	// use 3 decimals to represent a vertex
@@ -256,9 +280,8 @@ void SetupGeometry() {
 		sizeof(struct Vertex),	// stride (aka memory to jump to get to the next vertex)
 		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
 
-															// colour data will be in attribute index 1, and the remaining characteristics to read the data
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );								
-																																	 /* Bind our second VBO as being the active buffer and storing vertex attributes (colors) */
+	// colour data will be in attribute index 1, and the remaining characteristics to read the data
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
 	glEnableVertexAttribArray(1);
 
 	// normal data will be in attribute index 2
@@ -378,66 +401,8 @@ void SetupShaders(void) {
 //	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 //}
 
-void Render(int i) {
-	GLfloat angle;
-	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
-	GLfloat t = glfwGetTime();
-	GLfloat p = 400.f;
-	t = fmod(t, p);
-	angle = t * 360.f / p;
-	glm::mat4 View = glm::mat4(1.f);
-
-	cameraAngle[0] += cameraRotation[0];
-	cameraAngle[1] += cameraRotation[1];
-	cameraAngle[2] += cameraRotation[2];
-
-	View = glm::translate(View, cameraPosition);
-	View = glm::rotate(View, (cameraAngle[0] * 360.f)/p, glm::vec3(1.f, 0.f, 0.f));
-	View = glm::rotate(View, (cameraAngle[1] * 360.f) / p, glm::vec3(0.f, 1.f, 0.f));
-	View = glm::rotate(View, (cameraAngle[2] * 360.f) / p, glm::vec3(0.f, 0.f, 1.f));
-
-	for (int i = 0; i < en.size(); i++) {
-		glm::mat4 Model = en.at(i).model_transform();
-		glm::mat4 MVP = Projection * View * Model;
-
-		GLenum mode = NULL;
-		switch (renderMode) {
-		case 1:
-			mode = GL_LINE_STRIP;
-			break;
-		case 2:
-			mode = GL_TRIANGLES;
-			break;
-		}
-
-		glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
-		/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBindVertexArray(vao);
-
-		glDrawArrays(mode, 0, v.size());
-		glBindVertexArray(0);
-		/* Invoke glDrawArrays telling that our data consists of a triangle fan */
-	}
-}
-
-void SetupScenes() {
-	Entity e1 (Entity::Sphere, glm::vec3(1.f,0.f,0.f), glm::vec3(1.f, 2.f, 1.f), glm::vec3(3.14f/2.f,0.f,0.f), 20);
-	e1.add_my_vertices(v);
-	en.push_back(e1);
-
-	//e1.CreateSimpleSphere(centre, 1, 20);
-	//center.x = 5.f; center.y = 0.f; center.z = 0.f;
-	//CreateSimpleSphere(centre, 1, 20);
-
-	//printf("Size %d\n", v.size());
-
-	//GLfloat center[3] = { 0.f, 0.f, 0.f };
-	//CreateCone(center, 2.0f);
-
-	//GLfloat center[3] = { 0.f, 0.f, 0.f };
-	//CreateCylinder(center, true);
+void Render() {
+	scenes[current_scene]->Render(shaderprogram, vao);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -445,12 +410,21 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
 	// Mode controls
-	else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-		renderMode = 1;
-	else if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-		renderMode = 2;
+	else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+		current_scene = 0;
+		FreeGeometry();
+		SetupGeometry(0);
+	} else if (key == GLFW_KEY_B && action == GLFW_PRESS) {
+		current_scene = 1;
+		FreeGeometry();
+		SetupGeometry(1);
+	}
+	else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+		current_scene = 2;
+	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+		current_scene = 3;
 
-	else if (key == GLFW_KEY_A && action == GLFW_PRESS)
+	/*else if (key == GLFW_KEY_A && action == GLFW_PRESS)
 		cameraRotation[1] = cameraSpeed;
 	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
 		cameraRotation[1] = -cameraSpeed;
@@ -472,7 +446,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	else if (key == GLFW_KEY_UP && action == GLFW_REPEAT)
 		cameraPosition[2] += cameraSpeed*scale;
 	else if (key == GLFW_KEY_DOWN && action == GLFW_REPEAT)
-		cameraPosition[2] -= cameraSpeed*scale;
+		cameraPosition[2] -= cameraSpeed*scale;*/
+
+	/*else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+		renderMode = 1;
+	else if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+		renderMode = 2;*/
 }
 
 void init() {
@@ -497,7 +476,6 @@ int main() {
 	int screenWidth, screenHeight;
 	glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 
-	cameraPosition = glm::vec3(0.f, 0.f, -5.0f);
 
 	if (nullptr == window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -520,16 +498,17 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	SetupScenes();
-	SetupGeometry();
-
 	SetupShaders();
+
+	current_scene = 0;
+	SetupGeometry(0);
+
 	printf("Ready to render\n");
 
 	glViewport(0, 0, screenWidth, screenHeight);
 
 	while (!glfwWindowShouldClose(window)) {  // Main loop
-		Render(k);        // OpenGL rendering goes here...
-		k++;
+		Render();        // OpenGL rendering goes here...
 		glfwSwapBuffers(window);        // Swap front and back rendering buffers
 		glfwPollEvents();         // Poll for events.
 

@@ -24,6 +24,7 @@
 // My base classes
 #include "Vertex.h"
 #include "entity.h"
+#include "scene.h"
 
 void CreateCone(GLfloat c[3], GLfloat, GLfloat n[3]);
 

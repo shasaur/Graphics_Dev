@@ -24,12 +24,14 @@ public:
 	glm::vec3 size;
 	glm::vec3 angle;
 
+	bool wiremesh;
+
 	std::vector<Vertex> v;
 
 	Entity(Shape shape);
-	Entity(Shape shape, glm::vec3 p, glm::vec3 s, glm::vec3 a, int res);
+	Entity(Shape shape, glm::vec3 p, glm::vec3 s, glm::vec3 a, int res, bool wiremesh);
 
-	void CreateSimpleSphere(glm::vec3 c, double r, int n);
+	void CreateSimpleSphere(glm::vec3 c, double r, int n, bool wiremesh);
 
 	void add_my_vertices(std::vector<Vertex> &vertices);
 	glm::mat4 model_transform();

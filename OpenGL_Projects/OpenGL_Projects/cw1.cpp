@@ -58,11 +58,11 @@ char* filetobuf(char *file) { /* A simple function that will read a file into an
 
 
 /* These pointers will receive the contents of our shader source code files */
-GLchar *vertexsource, *fragmentsource;
+GLchar *v1source, *v2source, *f1source, *f2source;
 /* These are handles used to reference the shaders */
-GLuint vertexshader, fragmentshader;
+GLuint v1shader, v2shader, f1shader, f2shader;
 /* This is a handle to the shader program */
-GLuint shaderprogram;
+GLuint s1program, s2program;
 GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex Buffer Object */
 
 std::vector<Vertex> v;
@@ -350,59 +350,39 @@ void SetupSquareGeometry() {
 	glBindVertexArray(0);
 }
 
-void SetupShaders(void) {
-	/* Read our shaders into the appropriate buffers */
-	vertexsource = filetobuf("./tutorial3.vert");
-	fragmentsource = filetobuf("./tutorial3.frag");
+GLuint InitialiseShader(GLchar* vertex_source, GLchar* fragment_source) {
 	/* Assign our handles a "name" to new shader objects */
-	vertexshader = glCreateShader(GL_VERTEX_SHADER);
-	fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
+	v1shader = glCreateShader(GL_VERTEX_SHADER);
+	f1shader = glCreateShader(GL_FRAGMENT_SHADER);
 	/* Associate the source code buffers with each handle */
-	glShaderSource(vertexshader, 1, (const GLchar**)&vertexsource, 0);
-	glShaderSource(fragmentshader, 1, (const GLchar**)&fragmentsource, 0);
+	glShaderSource(v1shader, 1, (const GLchar**)&vertex_source, 0);
+	glShaderSource(f1shader, 1, (const GLchar**)&fragment_source, 0);
 	/* Compile our shader objects */
-	glCompileShader(vertexshader);
-	glCompileShader(fragmentshader);
+	glCompileShader(v1shader);
+	glCompileShader(f1shader);
 	/* Assign our program handle a "name" */
-	shaderprogram = glCreateProgram();
-	glAttachShader(shaderprogram, vertexshader);  /* Attach our shaders to our program */
-	glAttachShader(shaderprogram, fragmentshader);
+	GLuint shaderprogram = glCreateProgram();
+	glAttachShader(shaderprogram, v1shader);  /* Attach our shaders to our program */
+	glAttachShader(shaderprogram, f1shader);
 	glBindAttribLocation(shaderprogram, 0, "in_Position");   /* Bind attribute 0 (coordinates) to in_Position and attribute 1 (colors) to in_Color */
 	glBindAttribLocation(shaderprogram, 1, "in_Color");
 	glLinkProgram(shaderprogram);  /* Link our program, and set it as being actively used */
 	CheckShader(shaderprogram, "Basic Shader");
-	glUseProgram(shaderprogram);
+
+	return shaderprogram;
 }
 
-//void RenderLines(int i) {
-//	GLfloat angle;
-//	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
-//	GLfloat t = glfwGetTime();
-//	GLfloat p = 400.f;
-//	t = fmod(t, p);
-//	angle = t * 360.f / p;
-//	glm::mat4 View = glm::mat4(1.f);
-//	View = glm::translate(View, glm::vec3(0.f, 0.f, -5.0f));
-//	View = glm::rotate(View, angle * -1.0f, glm::vec3(1.f, 0.f, 0.f));
-//	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 1.f, 0.f));
-//	View = glm::rotate(View, angle * 0.5f, glm::vec3(0.f, 0.f, 1.f));
-//
-//
-//	glm::mat4 Model = glm::mat4(1.0f);
-//	glm::mat4 MVP = Projection * View * Model;
-//
-//	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
-//	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
-//	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//	glBindVertexArray(vao);
-//	glDrawArrays(GL_LINE_STRIP, 0, v.size());
-//	glBindVertexArray(0);
-//	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
-//}
+void SetupShaders(void) {
+	s1program = InitialiseShader(filetobuf("./no_light.vert"), filetobuf("./no_light.frag"));
+	s2program = InitialiseShader(filetobuf("./light.vert"), filetobuf("./light.frag"));
+	glUseProgram(s1program);
+}
 
 void Render() {
-	scenes[current_scene]->Render(shaderprogram, vao);
+	if (current_scene == 0)
+		scenes[current_scene]->Render(s1program, vao);
+	else
+		scenes[current_scene]->Render(s2program, vao);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -414,15 +394,30 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		current_scene = 0;
 		FreeGeometry();
 		SetupGeometry(0);
+
+		glUseProgram(s1program);
+
 	} else if (key == GLFW_KEY_B && action == GLFW_PRESS) {
 		current_scene = 1;
 		FreeGeometry();
 		SetupGeometry(1);
-	}
-	else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+		
+		glUseProgram(s2program);
+
+	}else if (key == GLFW_KEY_C && action == GLFW_PRESS) {
 		current_scene = 2;
-	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+		FreeGeometry();
+		SetupGeometry(2);
+
+		glUseProgram(s2program);
+
+	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
 		current_scene = 3;
+		FreeGeometry();
+		SetupGeometry(3);
+
+		glUseProgram(s2program);
+	}
 
 	/*else if (key == GLFW_KEY_A && action == GLFW_PRESS)
 		cameraRotation[1] = cameraSpeed;

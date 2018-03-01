@@ -60,12 +60,6 @@ char* filetobuf(char *file) { /* A simple function that will read a file into an
 }
 
 
-
-//
-//struct Triangle {
-//	Vertex vertices[3];
-//};
-
 /* These pointers will receive the contents of our shader source code files */
 GLchar *vertexsource, *fragmentsource;
 /* These are handles used to reference the shaders */
@@ -75,6 +69,7 @@ GLuint shaderprogram;
 GLuint vao, vbo[1]; /* Create handles for our Vertex Array Object and One Vertex Buffer Object */
 
 std::vector<Vertex> v;
+std::vector<Entity> en;
 
 /*
 Create a simple sphere
@@ -84,8 +79,6 @@ Create a simple sphere
 typedef struct {
 	double x, y, z;
 } XYZ;
-#define TWOPI           6.283185307179586476925287
-#define PID2            1.570796326794896619231322
 
 void Print(glm::mat4 x) {
 	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
@@ -100,7 +93,7 @@ void Print(GLfloat* position) {
 	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
 }
 
-void CreateCylinder(GLfloat c[3]) {
+void CreateCylinder(GLfloat c[3], bool capped) {
 	GLfloat cf = 0.0;
 	Vertex top_v;
 	top_v.position[0] = 0;
@@ -169,15 +162,29 @@ void CreateCylinder(GLfloat c[3]) {
 
 		//v.push_back(top_v); // Apex
 	}
+
+	if (capped) {
+		GLfloat normalDirection2[3] = { 0.f, 0.f, -1.f };
+		CreateCone(c, 0.f, normalDirection2);
+
+		c[2] = 2.f;
+		GLfloat normalDirection[3] = { 0.f, 0.f, 1.f };
+		CreateCone(c, 0.f, normalDirection);
+	}
 }
 
-void CreateCone(GLfloat c[3]) {
+void CreateCone(GLfloat c[3], GLfloat height, GLfloat n[3]) {
 
 	GLfloat cf = 0.0;
 	Vertex top_v;
-	top_v.position[0] = 0;
-	top_v.position[1] = 0;
-	top_v.position[2] = 0;
+	setPosition(top_v, c[0], c[1], c[2]);
+	if (height!=0)
+		setNormal(top_v, top_v.position[0] - c[0], top_v.position[1] - c[1], top_v.position[2] - c[2]);
+	else
+		setNormal(top_v, n[0], n[1], n[2]);
+	
+	//setColour(top_v, 0.5f, 0.5f, 0.5f);
+
 	top_v.color[0] = cf;
 	cf = 1. - cf;
 	top_v.color[1] = cf;
@@ -192,8 +199,13 @@ void CreateCone(GLfloat c[3]) {
 	for (GLfloat a = 0; a <= (2.f * 3.141596f + step); a += step) {
 
 		Vertex v1;
-		setPosition(v1, Radius * cos(a), Radius * sin(a), 2.0f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
+		setPosition(v1, Radius * cos(a) + c[0], Radius * sin(a) + c[1], height + c[2]); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		if (height != 0)
+			setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
+		else
+			setNormal(v1, n[0], n[1], n[2]);
+		
+		//setColour(v1, 0.5f, 0.5f, 0.5f);
 		v1.color[0] = cf;
 		cf = 1. - cf;
 		v1.color[1] = cf;
@@ -202,8 +214,14 @@ void CreateCone(GLfloat c[3]) {
 		cf = 1. - cf;
 
 		Vertex v2;
-		setPosition(v2, Radius * cos(a + step), Radius * sin(a + step), 2.0f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
+		setPosition(v2, Radius * cos(a + step) + c[0], Radius * sin(a + step) + c[1], height + c[2]); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
+		if (height != 0)
+			setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
+		else
+			setNormal(v2, n[0], n[1], n[2]);
+		
+		
+		//setColour(v2, 0.5f, 0.5f, 0.5f);
 		v2.color[0] = cf;
 		cf = 1. - cf;
 		v2.color[1] = cf;
@@ -309,97 +327,6 @@ void SetupSquareGeometry() {
 	glBindVertexArray(0);
 }
 
-void CreateSimpleSphere(XYZ c, double r, int n)
-{
-	int i, j;
-	double theta1, theta2, theta3;
-	XYZ e, p;
-
-	/*if (r < 0)
-		r = -r;
-	if (n < 0)
-		n = -n;
-	if (n < 4 || r <= 0) {
-		glBegin(GL_POINTS);
-		glVertex3f(c.x, c.y, c.z);
-		glEnd();
-		return;
-	}*/
-
-
-	// vertical
-	for (j = 0; j<n/2; j++) {
-		theta1 = j * TWOPI / n - PID2;
-		theta2 = (j + 1) * TWOPI / n - PID2;
-
-		/*if (method == 0)
-			glBegin(GL_QUAD_STRIP);
-		else
-			glBegin(GL_TRIANGLE_STRIP);*/
-
-		// horizontal
-		for (i = 0; i <= n; i++) {
-			Vertex v1;
-			randomiseColour(v1);
-
-			theta3 = i * TWOPI / n;
-
-			e.x = cos(theta2) * cos(theta3);
-			e.y = sin(theta2);
-			e.z = cos(theta2) * sin(theta3);
-
-			setPosition(v1, c.x + r * e.x, c.y + r * e.y, c.z + r * e.z);
-			setNormal(v1, v1.position[0] - c.x, v1.position[1] - c.y, v1.position[2] - c.z);
-
-			Vertex v2;
-			setColour(v2, v1);
-
-			e.x = cos(theta1) * cos(theta3);
-			e.y = sin(theta1);
-			e.z = cos(theta1) * sin(theta3);
-			setPosition(v2, c.x + r * e.x, c.y + r * e.y, c.z + r * e.z);
-			setNormal(v2, v2.position[0] - c.x, v2.position[1] - c.y, v2.position[2] - c.z);
-
-			Vertex v3;
-			setColour(v3, v1);
-
-			theta3 = (i+1) * TWOPI / n;
-
-			e.x = cos(theta2) * cos(theta3);
-			e.y = sin(theta2);
-			e.z = cos(theta2) * sin(theta3);
-
-			setPosition(v3, c.x + r * e.x, c.y + r * e.y, c.z + r * e.z);
-			setNormal(v3, v3.position[0] - c.x, v3.position[1] - c.y, v3.position[2] - c.z);
-
-			//triangle.vertices[0] = v1;
-			//triangle.vertices[1] = v2;
-			//triangle.vertices[2] = v3;
-			//t.push_back(triangle);
-
-			Vertex v4;
-			setColour(v4, v1);
-
-			e.x = cos(theta1) * cos(theta3);
-			e.y = sin(theta1);
-			e.z = cos(theta1) * sin(theta3);
-
-			setPosition(v4, c.x + r * e.x, c.y + r * e.y, c.z + r * e.z);
-			setNormal(v4, v4.position[0] - c.x, v4.position[1] - c.y, v4.position[2] - c.z);
-
-
-			v.push_back(v1);
-			v.push_back(v2);
-			v.push_back(v3);
-
-			v.push_back(v2);
-			v.push_back(v3);
-			v.push_back(v4);
-		}
-		glEnd();
-	}
-}
-
 void SetupShaders(void) {
 	/* Read our shaders into the appropriate buffers */
 	vertexsource = filetobuf("./tutorial3.vert");
@@ -469,46 +396,48 @@ void Render(int i) {
 	View = glm::rotate(View, (cameraAngle[1] * 360.f) / p, glm::vec3(0.f, 1.f, 0.f));
 	View = glm::rotate(View, (cameraAngle[2] * 360.f) / p, glm::vec3(0.f, 0.f, 1.f));
 
+	for (int i = 0; i < en.size(); i++) {
+		glm::mat4 Model = en.at(i).model_transform();
+		glm::mat4 MVP = Projection * View * Model;
 
-	glm::mat4 Model = glm::mat4(1.0f);
-	glm::mat4 MVP = Projection * View * Model;
+		GLenum mode = NULL;
+		switch (renderMode) {
+		case 1:
+			mode = GL_LINE_STRIP;
+			break;
+		case 2:
+			mode = GL_TRIANGLES;
+			break;
+		}
 
-	GLenum mode = NULL;
-	switch (renderMode) {
-	case 1:
-		mode = GL_LINE_STRIP;
-		break;
-	case 2:
-		mode = GL_TRIANGLES;
-		break;
+		glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
+		/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glBindVertexArray(vao);
+
+		glDrawArrays(mode, 0, v.size());
+		glBindVertexArray(0);
+		/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 	}
-
-	glUniformMatrix4fv(glGetUniformLocation(shaderprogram, "mvpmatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
-	/* Bind our modelmatrix variable to be a uniform called mvpmatrix in our shaderprogram */
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  /* Make our background black */
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glBindVertexArray(vao);
-
-
-
-	glDrawArrays(mode, 0, v.size());
-	glBindVertexArray(0);
-	/* Invoke glDrawArrays telling that our data consists of a triangle fan */
 }
 
 void SetupScenes() {
-	XYZ centre; centre.x = 0; centre.y = 0; centre.z = 0;
-	CreateSimpleSphere(centre, 1, 20);
-	centre.x = 5.f; centre.y = 0.f; centre.z = 0.f;
-	CreateSimpleSphere(centre, 1, 20);
+	Entity e1 (Entity::Sphere, glm::vec3(1.f,0.f,0.f), glm::vec3(1.f, 2.f, 1.f), glm::vec3(3.14f/2.f,0.f,0.f), 20);
+	e1.add_my_vertices(v);
+	en.push_back(e1);
 
-	printf("Size %d\n", v.size());
+	//e1.CreateSimpleSphere(centre, 1, 20);
+	//center.x = 5.f; center.y = 0.f; center.z = 0.f;
+	//CreateSimpleSphere(centre, 1, 20);
 
-	GLfloat center[3] = { 0.f, 0.f, 0.f };
-	CreateCone(center);
+	//printf("Size %d\n", v.size());
 
-	/*GLfloat center[3] = { 0.f, 0.f, 0.f };
-	CreateCylinder(center);*/
+	//GLfloat center[3] = { 0.f, 0.f, 0.f };
+	//CreateCone(center, 2.0f);
+
+	//GLfloat center[3] = { 0.f, 0.f, 0.f };
+	//CreateCylinder(center, true);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {

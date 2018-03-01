@@ -21,8 +21,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
+// My base classes
 #include "Vertex.h"
+#include "entity.h"
 
 void CreateCone(GLfloat c[3], GLfloat, GLfloat n[3]);
 

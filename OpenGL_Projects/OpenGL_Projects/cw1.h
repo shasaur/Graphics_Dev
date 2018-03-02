@@ -26,6 +26,8 @@
 #include "entity.h"
 #include "scene.h"
 
+#define PI 3.14159265359f
+
 void CreateCone(GLfloat c[3], GLfloat, GLfloat n[3]);
 
 #endif /* CW1_H */

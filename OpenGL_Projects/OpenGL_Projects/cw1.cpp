@@ -92,157 +92,43 @@ void Print(GLfloat* position) {
 	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
 }
 
-void CreateCylinder(GLfloat c[3], bool capped) {
-	GLfloat cf = 0.0;
-	Vertex top_v;
-	top_v.position[0] = 0;
-	top_v.position[1] = 0;
-	top_v.position[2] = 0;
-	top_v.color[0] = cf;
-	cf = 1. - cf;
-	top_v.color[1] = cf;
-	cf = 1. - cf;
-	top_v.color[2] = cf;
-	cf = 1. - cf;
+void ModelFalconHeavy(Scene &s) {
+	const int components = 10;
 
+	Entity rocket[components] = {
+		// First stage
+		Entity(Entity::Sphere,{ -2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Sphere,{ 2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cylinder, {-2.15f, 0.f, 1.f}, { 0.37f, 4.2f, 0.37f}, {PI/2, 0.f, 0.f}, 10, false),
+		Entity(Entity::Cylinder,{ 0.f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cylinder,{ 2.15f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
 
-	GLint lod = 32;
-	GLfloat step = 2.f * 3.141596f / GLfloat(lod);
-	GLfloat Radius = 1.f;
-	for (GLfloat a = 0; a <= (2.f * 3.141596f + step); a += step) {
+		// Second stage
+		Entity(Entity::Cylinder,{ 0.f, 0.f, -0.4f },{ 0.37f, 2.1f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Sphere,{ 0.f, 0.f, -2.1f },{ 0.43f, 1.4f, 0.43f },{ PI / 2, 0.f, 0.f }, 10, false),
 
-		Vertex v1;
-		setPosition(v1, Radius * cos(a), Radius * sin(a), 0.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
-		v1.color[0] = cf;
-		cf = 1. - cf;
-		v1.color[1] = cf;
-		cf = 1. - cf;
-		v1.color[2] = cf;
-		cf = 1. - cf;
+		Entity(Entity::Cone,{ -2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cone,{ 0.f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cone,{ 2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false)
+	};
 
-		Vertex v2;
-		setPosition(v2, Radius * cos(a + step), Radius * sin(a + step), 0.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
-		v2.color[0] = cf;
-		cf = 1. - cf;
-		v2.color[1] = cf;
-		cf = 1. - cf;
-		v2.color[2] = cf;
+	s.AddEntities(rocket, 10);
 
-		Vertex v3;
-		setPosition(v3, Radius * cos(a), Radius * sin(a), 2.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v3, v3.position[0] - c[0], v3.position[1] - c[1], v3.position[2] - c[2]);
-		v3.color[0] = v1.color[0];
-		v3.color[1] = v1.color[1];
-		v3.color[2] = v1.color[2];
-
-		Vertex v4;
-		setPosition(v4, Radius * cos(a + step), Radius * sin(a + step), 2.f); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		setNormal(v4, v4.position[0] - c[0], v4.position[1] - c[1], v4.position[2] - c[2]);
-		v4.color[0] = v2.color[0];
-		v4.color[1] = v2.color[1];
-		v4.color[2] = v2.color[2];
-
-		Print(v1.position);
-		Print(v2.position);
-		Print(v3.position);
-		Print(v4.position);
-
-		// Triangle
-		v.push_back(v1);
-		v.push_back(v2);
-		v.push_back(v3);
-
-		v.push_back(v2);
-		v.push_back(v3);
-		v.push_back(v4);
-
-
-		//v.push_back(top_v); // Apex
-	}
-
-	if (capped) {
-		GLfloat normalDirection2[3] = { 0.f, 0.f, -1.f };
-		CreateCone(c, 0.f, normalDirection2);
-
-		c[2] = 2.f;
-		GLfloat normalDirection[3] = { 0.f, 0.f, 1.f };
-		CreateCone(c, 0.f, normalDirection);
-	}
-}
-
-void CreateCone(GLfloat c[3], GLfloat height, GLfloat n[3]) {
-
-	GLfloat cf = 0.0;
-	Vertex top_v;
-	setPosition(top_v, c[0], c[1], c[2]);
-	if (height!=0)
-		setNormal(top_v, top_v.position[0] - c[0], top_v.position[1] - c[1], top_v.position[2] - c[2]);
-	else
-		setNormal(top_v, n[0], n[1], n[2]);
-	
-	//setColour(top_v, 0.5f, 0.5f, 0.5f);
-
-	top_v.color[0] = cf;
-	cf = 1. - cf;
-	top_v.color[1] = cf;
-	cf = 1. - cf;
-	top_v.color[2] = cf;
-	cf = 1. - cf;
-
-
-	GLint lod = 32;
-	GLfloat step = 2.f * 3.141596f / GLfloat(lod);
-	GLfloat Radius = 1.f;
-	for (GLfloat a = 0; a <= (2.f * 3.141596f + step); a += step) {
-
-		Vertex v1;
-		setPosition(v1, Radius * cos(a) + c[0], Radius * sin(a) + c[1], height + c[2]); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		if (height != 0)
-			setNormal(v1, v1.position[0] - c[0], v1.position[1] - c[1], v1.position[2] - c[2]);
-		else
-			setNormal(v1, n[0], n[1], n[2]);
-		
-		//setColour(v1, 0.5f, 0.5f, 0.5f);
-		v1.color[0] = cf;
-		cf = 1. - cf;
-		v1.color[1] = cf;
-		cf = 1. - cf;
-		v1.color[2] = cf;
-		cf = 1. - cf;
-
-		Vertex v2;
-		setPosition(v2, Radius * cos(a + step) + c[0], Radius * sin(a + step) + c[1], height + c[2]); //vertex: width x height x length (set to 0.0 for a circle (flat), >= 1.0 for a cone)
-		if (height != 0)
-			setNormal(v2, v2.position[0] - c[0], v2.position[1] - c[1], v2.position[2] - c[2]);
-		else
-			setNormal(v2, n[0], n[1], n[2]);
-		
-		
-		//setColour(v2, 0.5f, 0.5f, 0.5f);
-		v2.color[0] = cf;
-		cf = 1. - cf;
-		v2.color[1] = cf;
-		cf = 1. - cf;
-		v2.color[2] = cf;
-
-		// Triangle
-		v.push_back(v1);
-		v.push_back(v2);
-		v.push_back(top_v); // Apex
-	}
 }
 
 void SetupScenes() {
 	scenes[0] = new Scene();
 	scenes[1] = new Scene();
+	scenes[2] = new Scene(glm::vec3(0.f, 0.f, -20.f));
 
 	Entity e1(Entity::Sphere, glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.5f, 1.5f, 1.5f), glm::vec3(0.f, 0.f, 0.f), 40, true);
 	scenes[0]->AddEntity(e1);
 
 	Entity e2(Entity::Sphere, glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.f, 1.f, 1.f), glm::vec3(0.f, 0.f, 0.f), 40, false);
 	scenes[1]->AddEntity(e2);
+
+	ModelFalconHeavy(*scenes[2]);
+	scenes[2]->SetBackground(glm::vec3(0.1f, 0.1f, 0.1f));
 
 	//e1.CreateSimpleSphere(centre, 1, 20);
 	//center.x = 5.f; center.y = 0.f; center.z = 0.f;
@@ -255,40 +141,6 @@ void SetupScenes() {
 
 	//GLfloat center[3] = { 0.f, 0.f, 0.f };
 	//CreateCylinder(center, true);
-}
-
-void FreeGeometry() {
-	glDeleteBuffers(1, vbo);
-}
-
-void SetupGeometry(int sceneID) {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	// Generate an identifier to use for the Vertex Buffer Object, store it in vbo
-	glGenBuffers(1, vbo);
-	// Make this identifier the active one (storing vertex attributes)
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	// Give vertex data in v to the Vertex Buffer Object in OpenGL
-	glBufferData(GL_ARRAY_BUFFER, scenes[sceneID]->v.size() * sizeof(struct Vertex), scenes[sceneID]->v.data(), GL_STATIC_DRAW);
-
-	// usual setting up of memory locations to cycle through for attributes of vertices during rendering
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer((GLuint)0, // coordinate data will be in attribute index 0
-		3, GL_FLOAT,	// use 3 decimals to represent a vertex
-		GL_FALSE,		// not normalised
-		sizeof(struct Vertex),	// stride (aka memory to jump to get to the next vertex)
-		(const GLvoid*)offsetof(struct Vertex, position));	// coordinates are stored in the vertex.pos space
-
-	// colour data will be in attribute index 1, and the remaining characteristics to read the data
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, color));   // bug );
-	glEnableVertexAttribArray(1);
-
-	// normal data will be in attribute index 2
-	glVertexAttribPointer((GLuint)2, 3, GL_FLOAT, GL_FALSE, sizeof(struct Vertex), (const GLvoid*)offsetof(struct Vertex, normal));   // bug );
-	glEnableVertexAttribArray(2);
-
-	glBindVertexArray(0);
 }
 
 void SetupSquareGeometry() {
@@ -392,31 +244,31 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	// Mode controls
 	else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
 		current_scene = 0;
-		FreeGeometry();
-		SetupGeometry(0);
+		scenes[0]->FreeGeometry();
+		scenes[0]->SetupGeometry();
 
 		glUseProgram(s1program);
 
 	} else if (key == GLFW_KEY_B && action == GLFW_PRESS) {
 		current_scene = 1;
-		FreeGeometry();
-		SetupGeometry(1);
+		scenes[1]->FreeGeometry();
+		scenes[1]->SetupGeometry();
 		
 		glUseProgram(s2program);
 
 	}else if (key == GLFW_KEY_C && action == GLFW_PRESS) {
 		current_scene = 2;
-		FreeGeometry();
-		SetupGeometry(2);
+		scenes[2]->FreeGeometry();
+		scenes[2]->SetupGeometry();
 
 		glUseProgram(s2program);
 
 	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-		current_scene = 3;
+		/*current_scene = 3;
 		FreeGeometry();
 		SetupGeometry(3);
 
-		glUseProgram(s2program);
+		glUseProgram(s2program);*/
 	}
 
 	/*else if (key == GLFW_KEY_A && action == GLFW_PRESS)
@@ -496,13 +348,16 @@ int main() {
 	SetupShaders();
 
 	current_scene = 0;
-	SetupGeometry(0);
+	scenes[0]->SetupGeometry();
 
 	printf("Ready to render\n");
 
 	glViewport(0, 0, screenWidth, screenHeight);
 
+	//scenes[2]->Rotate(glm::vec3(0.f, 0.01f, 0.f));
+
 	while (!glfwWindowShouldClose(window)) {  // Main loop
+		scenes[current_scene]->Update();
 		Render();        // OpenGL rendering goes here...
 		glfwSwapBuffers(window);        // Swap front and back rendering buffers
 		glfwPollEvents();         // Poll for events.

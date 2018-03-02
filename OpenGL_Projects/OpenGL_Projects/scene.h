@@ -18,16 +18,29 @@
 class Scene {
 	std::vector<Entity> en;
 
-	float cameraAngle[3] = { 0,0,0 };
-	float cameraRotation[3] = { 0,0,0 };
+	glm::vec3 cameraAngle;
+	glm::vec3 cameraRotation;
 	float cameraSpeed = 0.01f;
 	glm::vec3 cameraPosition;
+	glm::vec3 background;
 
 public:
 	std::vector<Vertex> v;
 
 	Scene::Scene();
+	Scene::Scene(glm::vec3 cam);
+
+	void FreeGeometry();
+	void SetupGeometry();
+
+	void Rotate(glm::vec3 rot);
+
 	void AddEntity(Entity e);
+	void AddEntities(Entity* e, int n);
+
+	void SetBackground(glm::vec3 background);
+
+	void Update();
 	void Render(GLuint shaderprogram, GLuint vao);
 };
 

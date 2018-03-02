@@ -92,25 +92,77 @@ void Print(GLfloat* position) {
 	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
 }
 
+void MoveModel(glm::vec3 direction, Entity* entities, GLint components) {
+	glm::vec3 direction_r = glm::vec3(direction.x, direction.z, direction.y);
+	glm::mat4 rotation = glm::mat4(1.f);
+	rotation = glm::rotate(rotation, direction.x, glm::vec3(1.f, 0.f, 0.f));
+	rotation = glm::rotate(rotation, direction.y, glm::vec3(0.f, 1.f, 0.f));
+	rotation = glm::rotate(rotation, direction.z, glm::vec3(0.f, 0.f, 1.f));
+
+	for (int i = 0; i < components; i++) {
+		entities[i].angle += direction_r;
+		glm::vec4 temp = rotation * glm::vec4(entities[i].position, 1.f);
+		entities[i].position.x = temp.x;
+		entities[i].position.y = temp.y;
+		entities[i].position.z = temp.z;
+
+	}
+}
+
 void ModelFalconHeavy(Scene &s) {
 	const int components = 10;
 
-	Entity rocket[components] = {
+	//Entity rocket[components] = {
+	//	// First stage
+	//	Entity(Entity::Sphere,{ -2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Sphere,{ 2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Cylinder, {-2.15f, 0.f, 1.f}, { 0.37f, 4.2f, 0.37f}, {PI/2, 0.f, 0.f}, 10, false),
+	//	Entity(Entity::Cylinder,{ 0.f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Cylinder,{ 2.15f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+
+	//	// Second stage
+	//	Entity(Entity::Cylinder,{ 0.f, 0.f, -0.4f },{ 0.37f, 2.1f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Sphere,{ 0.f, 0.f, -2.1f },{ 0.43f, 1.4f, 0.43f },{ PI / 2, 0.f, 0.f }, 10, false),
+
+	//	Entity(Entity::Cone,{ -2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Cone,{ 0.f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
+	//	Entity(Entity::Cone,{ 2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false)
+	//};
+
+	Entity rocket[10] = {
 		// First stage
-		Entity(Entity::Sphere,{ -2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Sphere,{ 2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Cylinder, {-2.15f, 0.f, 1.f}, { 0.37f, 4.2f, 0.37f}, {PI/2, 0.f, 0.f}, 10, false),
-		Entity(Entity::Cylinder,{ 0.f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Cylinder,{ 2.15f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Sphere,{ -1.f, -0.75f, 0.f },{ 0.48f, 0.48f, 0.48f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Sphere,{ 1.f, -0.75f, 0.f },{ 0.48f, 0.48f, 0.48f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cylinder,{ 0.f, -5.f, 0.f },{ 0.48f, 0.48f, 4.2f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cylinder,{ -1.f, -5.f, 0.f },{ 0.48f, 0.48f, 4.2f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cylinder,{ 1.f, -5.f, 0.f },{ 0.48f, 0.48f, 4.2f },{ PI / 2, 0.f, 0.f }, 10, false),
 
-		// Second stage
-		Entity(Entity::Cylinder,{ 0.f, 0.f, -0.4f },{ 0.37f, 2.1f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Sphere,{ 0.f, 0.f, -2.1f },{ 0.43f, 1.4f, 0.43f },{ PI / 2, 0.f, 0.f }, 10, false),
+		//// Second stage
+		Entity(Entity::Cylinder,{ 0.f, 1.3f, 0.f },{ 0.48f, 0.48f, 2.3f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Sphere,{ 0.f, 3.2f, 0.f },{ 0.60f, 0.60f, 1.5f },{ PI / 2, 0.f, 0.f }, 10, false),
 
-		Entity(Entity::Cone,{ -2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Cone,{ 0.f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
-		Entity(Entity::Cone,{ 2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false)
+		Entity(Entity::Cone,{ -1.f, -8.9f, 0.f },{ 0.42f, 0.42f, 0.42f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cone,{ 0.f, -8.9f, 0.f },{ 0.42f, 0.42f, 0.42f },{ PI / 2, 0.f, 0.f }, 10, false),
+		Entity(Entity::Cone,{ 1.f, -8.9f, 0.f },{ 0.42f, 0.42f, 0.42f },{ PI / 2, 0.f, 0.f }, 10, false)
 	};
+
+	// Initial positioning/rotation
+	//glm::vec3 direction = glm::vec3((PI / 2.f), 0.f, 0.f);
+	//glm::vec3 direction = glm::vec3(0.f, (PI / 2.f), 0.f);
+
+	glm::vec3 direction(-(PI / 8.f)*3.f, 0.f, -0.2f);
+	MoveModel(direction, rocket, components);
+	//MoveModel({ 0.f, -(PI / 4.f), 0.f }, rocket, components);
+	//MoveModel({ 0.f, 0.f, (PI / 2.f) }, rocket, components);
+	
+	GLfloat d = direction.y;
+	direction.x = 0.00005f * 1.5f;
+	direction.y = 0.00005f * 1.5f;
+	direction.z = -0.0001f * 1.5f;
+	for (int i = 0; i < components; i++) {
+		rocket[i].AddAnimation(1, 125, direction);
+		rocket[i].AddAnimation(0, 800, direction);
+	}
 
 	s.AddEntities(rocket, 10);
 
@@ -119,7 +171,7 @@ void ModelFalconHeavy(Scene &s) {
 void SetupScenes() {
 	scenes[0] = new Scene();
 	scenes[1] = new Scene();
-	scenes[2] = new Scene(glm::vec3(0.f, 0.f, -20.f));
+	scenes[2] = new Scene(glm::vec3(-8.f, -8.f, -5.f));
 
 	Entity e1(Entity::Sphere, glm::vec3(0.f, 0.f, 0.f), glm::vec3(1.5f, 1.5f, 1.5f), glm::vec3(0.f, 0.f, 0.f), 40, true);
 	scenes[0]->AddEntity(e1);
@@ -318,6 +370,7 @@ int main() {
 
 	init();
 
+
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Learn OpenGL", nullptr, nullptr);
 
 	int screenWidth, screenHeight;
@@ -343,6 +396,7 @@ int main() {
 	glfwSetKeyCallback(window, key_callback);
 	fprintf(stderr, "GL INFO %s\n", glGetString(GL_VERSION));
 	glEnable(GL_DEPTH_TEST);
+	//glDepthMask(GL_FALSE);
 
 	SetupScenes();
 	SetupShaders();
@@ -353,8 +407,10 @@ int main() {
 	printf("Ready to render\n");
 
 	glViewport(0, 0, screenWidth, screenHeight);
+	//glFrustum(left,right,bottom,top,near,far).
+	//glFrustum(0., 100., 100., 100., 0., 1000.);
 
-	//scenes[2]->Rotate(glm::vec3(0.f, 0.01f, 0.f));
+	//scenes[2]->Rotate(glm::vec3(0.01f, 0.f, 0.f));
 
 	while (!glfwWindowShouldClose(window)) {  // Main loop
 		scenes[current_scene]->Update();

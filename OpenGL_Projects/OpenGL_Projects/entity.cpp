@@ -171,7 +171,7 @@ void Entity::CreateSimpleSphere(int n, bool wiremesh)
 }
 
 void Entity::CreateCylinder(bool capped) {
-	GLfloat cf = 0.0;
+	GLfloat cf = 0.0;/*
 	Vertex top_v;
 	top_v.position[0] = 0;
 	top_v.position[1] = 0;
@@ -181,7 +181,7 @@ void Entity::CreateCylinder(bool capped) {
 	top_v.color[1] = cf;
 	cf = 1. - cf;
 	top_v.color[2] = cf;
-	cf = 1. - cf;
+	cf = 1. - cf;*/
 
 
 	GLint lod = 32;
@@ -323,13 +323,23 @@ glm::mat4 Entity::angle_matrix() {
 }
 
 glm::mat4 Entity::model_transform() {
-	glm::mat4 t = glm::mat4(1.f);
+	glm::mat4 r = glm::mat4(1.f);
+	r = glm::rotate(r, angle.x, glm::vec3(1, 0, 0));
+	r = glm::rotate(r, angle.y, glm::vec3(0, 1, 0));
+	r = glm::rotate(r, angle.z, glm::vec3(0, 0, 1));
+	
+	glm::mat4 Model =
+		glm::translate(glm::mat4(1.), position) *
+		r *
+		glm::scale(glm::mat4(1.), size);
 
-	t = glm::scale(t, size);
-	t = glm::rotate(t, angle.x, glm::vec3(1, 0, 0));
-	t = glm::rotate(t, angle.y, glm::vec3(0, 1, 0));
-	t = glm::rotate(t, angle.z, glm::vec3(0, 0, 1));
-	t = glm::translate(t, position);
+
+	return Model;
+
+
+
+	/*t = glm::scale(t, size);
+	t = glm::translate(t, position);*/
 
 	/*t[0][0] = size.x;
 	t[1][1] = size.y;
@@ -368,7 +378,7 @@ glm::mat4 Entity::model_transform() {
 		t = new_t;
 	}*/
 
-	return t;
+	//return t;
 }
 
 void Entity::add_my_vertices(std::vector<Vertex> &vertices) {
@@ -412,9 +422,9 @@ void Entity::Animate() {
 			}
 
 			// Update
-			position.z += mom_movement.z / size.y;
-			position.y += mom_movement.y / size.z;
-			position.x += mom_movement.x / size.x;
+			position.z += mom_movement.z;
+			position.y += mom_movement.y;
+			position.x += mom_movement.x;
 			/*position += mom_movement/position;
 			angle += mom_angular;
 */

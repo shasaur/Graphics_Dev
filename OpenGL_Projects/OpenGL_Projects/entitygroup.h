@@ -5,9 +5,13 @@
 
 
 class EntityGroup {
+	std::vector<Entity*> en;
 
 public:
-	void Update();
+	EntityGroup();
+
+	void Add(Entity &e);
+	void Update(GLint type, GLint length, glm::vec3 mag);
 };
 
 #endif /* ENTITYGROUP_H */

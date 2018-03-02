@@ -112,24 +112,7 @@ void MoveModel(glm::vec3 direction, Entity* entities, GLint components) {
 void ModelFalconHeavy(Scene &s) {
 	const int components = 10;
 
-	//Entity rocket[components] = {
-	//	// First stage
-	//	Entity(Entity::Sphere,{ -2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Sphere,{ 2.15f, 0.f, 0.f },{ 0.37f, 0.37f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Cylinder, {-2.15f, 0.f, 1.f}, { 0.37f, 4.2f, 0.37f}, {PI/2, 0.f, 0.f}, 10, false),
-	//	Entity(Entity::Cylinder,{ 0.f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Cylinder,{ 2.15f, 0.f, 1.f },{ 0.37f, 4.2f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-
-	//	// Second stage
-	//	Entity(Entity::Cylinder,{ 0.f, 0.f, -0.4f },{ 0.37f, 2.1f, 0.37f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Sphere,{ 0.f, 0.f, -2.1f },{ 0.43f, 1.4f, 0.43f },{ PI / 2, 0.f, 0.f }, 10, false),
-
-	//	Entity(Entity::Cone,{ -2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Cone,{ 0.f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false),
-	//	Entity(Entity::Cone,{ 2.65f, 0.f, 27.f },{ 0.3f, 0.3f, 0.3f },{ PI / 2, 0.f, 0.f }, 10, false)
-	//};
-
-	Entity rocket[10] = {
+	Entity rocket[components] = {
 		// First stage
 		Entity(Entity::Sphere,{ -1.f, -0.75f, 0.f },{ 0.48f, 0.48f, 0.48f },{ PI / 2, 0.f, 0.f }, 10, false),
 		Entity(Entity::Sphere,{ 1.f, -0.75f, 0.f },{ 0.48f, 0.48f, 0.48f },{ PI / 2, 0.f, 0.f }, 10, false),
@@ -137,7 +120,7 @@ void ModelFalconHeavy(Scene &s) {
 		Entity(Entity::Cylinder,{ -1.f, -5.f, 0.f },{ 0.48f, 0.48f, 4.2f },{ PI / 2, 0.f, 0.f }, 10, false),
 		Entity(Entity::Cylinder,{ 1.f, -5.f, 0.f },{ 0.48f, 0.48f, 4.2f },{ PI / 2, 0.f, 0.f }, 10, false),
 
-		//// Second stage
+		// Second stage
 		Entity(Entity::Cylinder,{ 0.f, 1.3f, 0.f },{ 0.48f, 0.48f, 2.3f },{ PI / 2, 0.f, 0.f }, 10, false),
 		Entity(Entity::Sphere,{ 0.f, 3.2f, 0.f },{ 0.60f, 0.60f, 1.5f },{ PI / 2, 0.f, 0.f }, 10, false),
 
@@ -145,6 +128,16 @@ void ModelFalconHeavy(Scene &s) {
 		Entity(Entity::Cone,{ 0.f, -8.9f, 0.f },{ 0.42f, 0.42f, 0.42f },{ PI / 2, 0.f, 0.f }, 10, false),
 		Entity(Entity::Cone,{ 1.f, -8.9f, 0.f },{ 0.42f, 0.42f, 0.42f },{ PI / 2, 0.f, 0.f }, 10, false)
 	};
+
+	EntityGroup booster1 = EntityGroup();
+	booster1.Add(rocket[0]);
+	booster1.Add(rocket[3]);
+	booster1.Add(rocket[7]);
+
+	EntityGroup booster2 = EntityGroup();
+	booster2.Add(rocket[1]);
+	booster2.Add(rocket[4]);
+	booster2.Add(rocket[9]);
 
 	// Initial positioning/rotation
 	//glm::vec3 direction = glm::vec3((PI / 2.f), 0.f, 0.f);
@@ -162,6 +155,31 @@ void ModelFalconHeavy(Scene &s) {
 	for (int i = 0; i < components; i++) {
 		rocket[i].AddAnimation(1, 125, direction);
 		rocket[i].AddAnimation(0, 800, direction);
+	}
+
+	// stage 1 seperation
+	booster1.Update(1, 5, glm::vec3(-0.0005f, 0.f, 0.f));//-0.00015f, 0.0003f));
+	booster2.Update(1, 5, glm::vec3(0.0005f, 0.f, 0.f));//-0.00015f, 0.0003f));
+
+	booster1.Update(0, 150, glm::vec3(-0.0005f, 0.f, 0.f));//-0.00015f, 0.0003f));
+	booster2.Update(0, 150, glm::vec3(0.0005f, 0.f, 0.f));//-0.00015f, 0.0003f));
+
+
+	// spin around
+	booster1.Update(2, 177, direction);
+	booster2.Update(2, 177, direction);
+	booster1.Update(2, 177, -direction);
+	booster2.Update(2, 177, -direction);
+
+	// reverse boost to land
+	booster2.Update(1, 250, -direction);
+	booster1.Update(1, 250, -direction);
+
+	booster1.Update(0, 500, -direction);
+	booster2.Update(0, 500, -direction);
+
+	for (int i = 0; i < components; i++) {
+		rocket[i].AddAnimation(0, 1200, direction);
 	}
 
 	s.AddEntities(rocket, 10);
@@ -413,7 +431,7 @@ int main() {
 	//scenes[2]->Rotate(glm::vec3(0.01f, 0.f, 0.f));
 
 	while (!glfwWindowShouldClose(window)) {  // Main loop
-		scenes[current_scene]->Update();
+		scenes[current_scene]->Update(current_scene);
 		Render();        // OpenGL rendering goes here...
 		glfwSwapBuffers(window);        // Swap front and back rendering buffers
 		glfwPollEvents();         // Poll for events.

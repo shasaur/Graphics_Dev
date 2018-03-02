@@ -329,7 +329,7 @@ glm::mat4 Entity::model_transform() {
 	r = glm::rotate(r, angle.z, glm::vec3(0, 0, 1));
 	
 	glm::mat4 Model =
-		glm::translate(glm::mat4(1.), position) *
+		glm::translate(glm::mat4(1.), glm::vec3(position)) *
 		r *
 		glm::scale(glm::mat4(1.), size);
 
@@ -400,7 +400,41 @@ void Entity::AddAnimation(GLuint type, GLuint length, glm::vec3 mag) {
 	an_magnitudes.push_back(mag);
 }
 
-void Entity::Animate() {
+void PrintQ(glm::mat4 x) {
+	x = glm::transpose(x); // cos I got  the storage wrong, and its quicker than retyping.
+	printf("\n[[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]\n[%8.4f %8.4f %8.4f %8.4f]]\n",
+		x[0][0], x[0][1], x[0][2], x[0][3],
+		x[1][0], x[1][1], x[1][2], x[1][3],
+		x[2][0], x[2][1], x[2][2], x[2][3],
+		x[3][0], x[3][1], x[3][2], x[3][3]);
+}
+
+void PrintQ(glm::dvec4 position) {
+	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
+}
+
+void PrintQ(glm::dvec3 position) {
+	printf("(%f, %f, %f)\n", position[0], position[1], position[2]);
+}
+void Entity::MoveModel(glm::dvec3 direction, glm::dvec3 p) {
+	glm::dvec3 direction_r = glm::dvec3(direction.x, direction.z, direction.y);
+	glm::dmat4 rotation = glm::dmat4(1.);
+	rotation = glm::rotate(rotation, (double)direction.x, glm::dvec3(1., 0., 0.));
+	rotation = glm::rotate(rotation, (double)direction.z, glm::dvec3(0., 1., 0.));
+	rotation = glm::rotate(rotation, (double)direction.y, glm::dvec3(0., 0., 1.));
+
+
+	angle += direction_r;
+	glm::dvec4 temp = rotation * glm::dvec4(position-p, 1.);
+	PrintQ(rotation);
+	PrintQ(temp);
+	position.x = temp.x+p.x;
+	position.y = temp.y + p.y;
+	position.z = temp.z + p.z;
+	PrintQ(position);
+}
+
+void Entity::Animate(glm::vec3 pivot) {
 	
 	// If the entity is to be animated
 	if (an_types.size() != 0) {
@@ -425,9 +459,11 @@ void Entity::Animate() {
 			position.z += mom_movement.z;
 			position.y += mom_movement.y;
 			position.x += mom_movement.x;
-			/*position += mom_movement/position;
-			angle += mom_angular;
-*/
+			//position += mom_movement/position;
+			//angle += mom_angular;
+			if (an_types.at(animation) == 2) printf("ya");
+			MoveModel(mom_angular, pivot);
+
 			// Repeating and continuation mechanics
 			frame++;
 

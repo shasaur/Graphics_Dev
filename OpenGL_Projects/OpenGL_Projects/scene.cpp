@@ -48,9 +48,20 @@ void Scene::SetupGeometry() {
 	}
 }
 
-void Scene::Update() {
+void Scene::Update(GLint screenID) {
 	for (int i = 0; i < en.size(); i++) {
-		en.at(i).Animate();
+		if (screenID == 2) {
+			printf("%d", i);
+			if (i == 0 || i == 3 || i == 7) {
+				en.at(i).Animate(en.at(3).position);
+			}
+			else if (i == 1 || i == 4 || i == 9) {
+				en.at(i).Animate(en.at(4).position);
+			}
+			else {
+				en.at(i).Animate(glm::vec3(0.f,0.f,0.f));
+			}
+		}
 	}
 }
 

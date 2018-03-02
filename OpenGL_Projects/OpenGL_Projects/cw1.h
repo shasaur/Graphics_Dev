@@ -25,6 +25,7 @@
 #include "Vertex.h"
 #include "entity.h"
 #include "scene.h"
+#include "entitygroup.h"
 
 #define PI 3.14159265359f
 

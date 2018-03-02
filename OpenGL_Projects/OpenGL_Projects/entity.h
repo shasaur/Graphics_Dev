@@ -31,7 +31,7 @@ public:
 
 	enum Shape { Sphere, Cone, Cylinder, Cube };
 
-	glm::vec3 position;
+	glm::dvec3 position;
 	glm::vec3 size;
 	glm::vec3 angle;
 
@@ -59,7 +59,9 @@ public:
 	glm::mat4 model_transform();
 
 	void AddAnimation(GLuint type, GLuint length, glm::vec3 mag);
-	void Animate();
+	void Animate(glm::vec3 pivot);
+
+	void MoveModel(glm::dvec3 direction, glm::dvec3 p);
 };
 
 #endif /* ENTITY_H */

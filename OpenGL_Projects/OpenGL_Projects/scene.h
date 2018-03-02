@@ -40,7 +40,7 @@ public:
 
 	void SetBackground(glm::vec3 background);
 
-	void Update();
+	void Update(GLint screenID);
 	void Render(GLuint shaderprogram, GLuint vao);
 };
 
